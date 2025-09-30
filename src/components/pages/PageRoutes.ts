@@ -12,4 +12,5 @@ export const PageRoutes = {
   terms: '/terms',
   about: '/about',
   eggscanner: '/eggscanner',
+  sandbox: '/sandbox',
 };

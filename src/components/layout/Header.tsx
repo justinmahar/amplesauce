@@ -114,6 +114,15 @@ export default function Header(_props: HeaderProps): JSX.Element {
           Contact
         </Link>
       </Nav>
+      <Nav>
+        <Link
+          to={PageRoutes.sandbox}
+          className={classNames('nav-link popIn', pathname.startsWith(PageRoutes.sandbox) && 'fw-bold', textColorClass)}
+          role="button"
+        >
+          Sandbox
+        </Link>
+      </Nav>
       {!user && hasFirebaseConfig && (
         <Nav key="login-nav">
           <Link
