@@ -74,6 +74,7 @@ See below for the main list of features.
 - [Overview](#overview)
   - [Features include:](#features-include)
 - [Table of Contents](#table-of-contents)
+- [Documentation](#documentation)
 - [🚀 Quick start](#-quick-start)
 - [Adding Page Components](#adding-page-components)
 - [Adding Markdown Pages](#adding-markdown-pages)
@@ -115,6 +116,10 @@ See below for the main list of features.
 - [Removing Bootstrap and Font Awesome](#removing-bootstrap-and-font-awesome)
 - [Terms of Service and Privacy Policy](#terms-of-service-and-privacy-policy)
 - [License](#license)
+
+## Documentation
+
+- Project plan: [Amplesauce Project Plan](docs/Amplesauce-Project-Plan.md)
 
 ## 🚀 Quick start
 
