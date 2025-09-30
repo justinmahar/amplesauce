@@ -18,31 +18,31 @@ const handleCors = cors({ origin: true });
 /**
  * A utility function for miscellaneous tasks.
  */
-export const doUtility = https.onRequest(async (request, response): Promise<void> => {
-  handleCors(request, response, async () => {
-    const httpResult = new HttpsRequestResult();
-    try {
-      await generalRateLimiter.rejectOnQuotaExceededOrRecordUsage(request.ip);
-      try {
-        // ==================
-        // ==> MAIN OPERATION
-        const opResult = await utilityMain();
-        httpResult.addOp(opResult.operation);
-        // ==================
-      } catch (error) {
-        httpResult.status = StatusCodes.INTERNAL_SERVER_ERROR;
-        httpResult.error = `${error}`;
-        httpResult.success = false;
-      }
-    } catch (error) {
-      httpResult.status = StatusCodes.TOO_MANY_REQUESTS;
-      httpResult.error = `Error: Too many requests. Please wait and try again.`;
-      httpResult.success = false;
-    }
+// export const doUtility = https.onRequest(async (request, response): Promise<void> => {
+//   handleCors(request, response, async () => {
+//     const httpResult = new HttpsRequestResult();
+//     try {
+//       await generalRateLimiter.rejectOnQuotaExceededOrRecordUsage(request.ip);
+//       try {
+//         // ==================
+//         // ==> MAIN OPERATION
+//         const opResult = await utilityMain();
+//         httpResult.addOp(opResult.operation);
+//         // ==================
+//       } catch (error) {
+//         httpResult.status = StatusCodes.INTERNAL_SERVER_ERROR;
+//         httpResult.error = `${error}`;
+//         httpResult.success = false;
+//       }
+//     } catch (error) {
+//       httpResult.status = StatusCodes.TOO_MANY_REQUESTS;
+//       httpResult.error = `Error: Too many requests. Please wait and try again.`;
+//       httpResult.success = false;
+//     }
 
-    httpResult.send(response);
-  });
-});
+//     httpResult.send(response);
+//   });
+// });
 
 /**
  * Sets up a new user account.

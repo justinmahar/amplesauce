@@ -1,5 +1,5 @@
 {
-  "name": "witengine-firebase",
+  "name": "ample-sauce-firebase",
   "private": true,
   "scripts": {
     "deploy-rules": "firebase use default && firebase deploy --only firestore:rules",

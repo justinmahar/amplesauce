@@ -1,10 +1,9 @@
 import { googleAI } from '@genkit-ai/googleai';
-
 import { z } from 'genkit';
 import { gemini } from '../config';
-import { getGeminiConfigFlow } from './getGeminiConfigFlow';
 import { GenkitMessage } from './GenkitMessage';
 import { authenticateUserFlow } from './authenticateUserFlow';
+import { getGeminiConfigFlow } from './getGeminiConfigFlow';
 
 // Types/Interfaces
 export interface PromptFlowInput {
