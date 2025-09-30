@@ -1,6 +1,6 @@
 import { PageProps } from 'gatsby';
 import * as React from 'react';
-import { Alert, Button, Container, Form, InputGroup, Spinner } from 'react-bootstrap';
+import { Accordion, Alert, Button, Container, Form, InputGroup, Spinner } from 'react-bootstrap';
 import Body from '../layout/Body';
 import Layout from '../layout/Layout';
 import Head from '../layout/Head';
@@ -8,6 +8,7 @@ import { SectionBackground } from '../sections/parts/SectionBackground';
 import { useChat } from '../hooks/useChat';
 import Markdown from 'react-markdown';
 import { VideoSchema } from '../genkit/VideoSchema';
+import { styled } from 'styled-components';
 
 export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.Element {
   const contentTitle = 'Home';
@@ -24,9 +25,7 @@ export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.E
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
 
-    const prompt = `
-    Generate an example video.
-    `;
+    const prompt = `${queryValue}`;
 
     void sendMessage({ prompt, schema: JSON.stringify(VideoSchema) });
   };
@@ -51,7 +50,7 @@ export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.E
                 </Button>
               </InputGroup>
             </Form>
-            <div className="w-100 mt-3" style={{ maxWidth: 640 }}>
+            <div className="w-100 mt-3 d-flex flex-column gap-2" style={{ maxWidth: 640 }}>
               {isLoading && (
                 <div className="text-muted d-flex justify-content-center align-items-center gap-2">
                   <Spinner animation="border" size="sm" role="status" className="me-2" />
@@ -66,14 +65,23 @@ export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.E
               {!!response && !isLoading && (
                 <Alert variant="secondary" className="mt-2 mb-0">
                   {response.output?.message && (
-                    <p>
+                    <MarkdownDiv>
                       <Markdown>{response.output?.message}</Markdown>
-                    </p>
+                    </MarkdownDiv>
                   )}
-                  <pre className="mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {JSON.stringify(response, null, 2)}
-                  </pre>
                 </Alert>
+              )}
+              {!!response && !isLoading && (
+                <Accordion>
+                  <Accordion.Item eventKey="0">
+                    <Accordion.Header>Response</Accordion.Header>
+                    <Accordion.Body>
+                      <pre className="mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        {JSON.stringify(response, null, 2)}
+                      </pre>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                </Accordion>
               )}
             </div>
           </Container>
@@ -82,3 +90,10 @@ export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.E
     </Layout>
   );
 }
+
+// Last element should not have a bottom margin
+const MarkdownDiv = styled.div`
+  > *:last-child {
+    margin-bottom: 0;
+  }
+`;
