@@ -4,6 +4,7 @@ import { gemini } from '../config';
 import { GenkitMessage } from './GenkitMessage';
 import { authenticateUserFlow } from './authenticateUserFlow';
 import { getGeminiConfigFlow } from './getGeminiConfigFlow';
+import { logger } from 'firebase-functions/v1';
 
 // Types/Interfaces
 export type NicheStrategy = 'nicheDown' | 'nicheSideways';
@@ -43,6 +44,7 @@ export interface NicheIdea {
 
 export interface NicheHunterFlowOutput {
   ideas: NicheIdea[];
+  error?: string;
 }
 
 export const nicheHunterFlow = gemini.defineFlow(
@@ -55,6 +57,7 @@ export const nicheHunterFlow = gemini.defineFlow(
       userUid: z.string(),
       authToken: z.string(),
     }),
+    streamSchema: z.string(),
     outputSchema: z.object({
       ideas: z.array(
         z.object({
@@ -72,30 +75,32 @@ export const nicheHunterFlow = gemini.defineFlow(
       ),
     }),
   },
-  async (input): Promise<NicheHunterFlowOutput> => {
+  async (input, { sendChunk }): Promise<NicheHunterFlowOutput> => {
     // (Reserved) Trace collection for future debugging
     const limit = input.limit ?? 10;
-    // 1) Authenticate user
+    const trace = (log: string) => {
+      try {
+        sendChunk(JSON.stringify({ type: 'trace', trace: log }));
+      } catch {
+        // no-op
+      }
+    };
+
+    trace('Authenticating user...');
     await authenticateUserFlow({ userUid: input.userUid, authToken: input.authToken });
+    trace('Authentication successful');
 
     // 2) Get Gemini config
     const { model } = await getGeminiConfigFlow();
+    trace(`Gemini model: ${model}`);
 
     // 3) Build prompt and schema
-    const prompt = `You are a niche ideation assistant for YouTube search-based video topics. Your goal is to generate niche ideas for a given niche and strategy, with a focus on the highest RPM (revenue per mille) and engagement opportunities. 
-Generate ${limit} ${input.strategy === 'nicheDown' ? 'subniches (niche down)' : 'adjacent/similar niches (niche sideways)'} for the niche: "${input.niche}".
-
-Rules:
-- Output strictly as JSON that conforms to the provided schema.
-- Provide reasonable numeric estimates based on publicly observable signals.
-- Scores use 0=low, 1=medium, 2=high.
-- Do not add fields not in the schema. Do not include commentary.
-`;
+    const prompt = `You are a niche ideation assistant for YouTube search-based video topics. Your goal is to generate niche ideas for a given niche.
+Generate no more than ${limit} ${input.strategy === 'nicheDown' ? 'subniches (niche down)' : 'adjacent/similar niches (niche sideways)'} for the following niche: "${input.niche}"`;
 
     const jsonSchema = {
       type: 'object',
-      description:
-        'Structured list of niche ideas with short 2-letter property names. Comments describe each field in detail.',
+      description: 'Structured list of niche ideas.',
       properties: {
         ideas: {
           type: 'array',
@@ -103,7 +108,7 @@ Rules:
           items: {
             type: 'object',
             properties: {
-              nm: { type: 'string', description: 'Name of the subniche or related niche' },
+              nm: { type: 'string', description: 'Name of the niche' },
               rp: { type: 'number', description: 'Estimated revenue per mille (RPM) for monetized views' },
               af: { type: 'integer', minimum: 0, maximum: 2, description: 'Affiliate strength: 0=low,1=medium,2=high' },
               sp: {
@@ -130,28 +135,46 @@ Rules:
               en: { type: 'integer', minimum: 0, maximum: 2, description: 'Engagement score: 0=low,1=medium,2=high' },
             },
             required: ['nm', 'rp', 'af', 'sp', 'mk', 'mv', 'st', 'eg', 'pp', 'en'],
-            additionalProperties: false,
           },
-          minItems: limit,
-          maxItems: limit,
         },
       },
       required: ['ideas'],
-      additionalProperties: false,
-    } as const;
+    };
 
     // 4) Call Gemini
     const messages: GenkitMessage[] = [{ role: 'user', content: [{ text: prompt }] }];
 
-    const generation = await gemini.generate({
+    trace('Calling Gemini (stream)...');
+    trace(`Prompt: ${prompt}`);
+    trace(`JSON Schema: ${JSON.stringify(jsonSchema)}`);
+    const { stream, response } = gemini.generateStream({
       model: googleAI.model(model),
       messages,
-      tools: [],
+      // tools: [],
       context: {},
       output: { jsonSchema },
     });
 
-    const ideas = (generation.output as unknown as { ideas?: NicheIdea[] })?.ideas ?? [];
-    return { ideas };
+    for await (const chunk of stream) {
+      try {
+        sendChunk(JSON.stringify({ type: 'output', output: chunk.output }));
+      } catch (e) {
+        logger.error(e);
+        trace(`Error sending chunk: ${e}`);
+      }
+    }
+
+    let output: NicheHunterFlowOutput = { ideas: [] };
+    try {
+      const generation = await response;
+      output = generation?.output;
+    } catch (e) {
+      output = { error: `${e}`, ideas: [] };
+      logger.error(e);
+      trace(`Error getting response: ${e}`);
+    }
+
+    trace(`Completed with ${(output.ideas ?? []).length} ideas. Output was: ${JSON.stringify(output)}`);
+    return output;
   },
 );

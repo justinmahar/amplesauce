@@ -1,6 +1,6 @@
 import React, { JSX } from 'react';
 import { Alert, Button, Form, InputGroup, Spinner, Table } from 'react-bootstrap';
-import { runFlow } from 'genkit/beta/client';
+import { streamFlow } from 'genkit/beta/client';
 import { useUserAccountContext } from '../../../contexts/UserAccountProvider';
 import { useUserSettingsContext } from '../../../contexts/UserSettingsProvider';
 
@@ -10,17 +10,19 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
   const [niche, setNiche] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [limitValue, setLimitValue] = React.useState<string>('10');
+  const [traces, setTraces] = React.useState<string[]>([]);
   type Idea = {
-    nm: string;
-    rp: number;
-    af: number;
-    sp: number;
-    mk: number;
-    mv: number;
-    st: number;
-    eg: number;
-    pp: number;
-    en: number;
+    nm?: string;
+    rp?: number;
+    af?: number;
+    sp?: number;
+    mk?: number;
+    mv?: number;
+    st?: number;
+    eg?: number;
+    pp?: number;
+    en?: number;
   };
   type ScoredIdea = Idea & { score: number };
   const [ideas, setIdeas] = React.useState<ScoredIdea[]>([]);
@@ -31,7 +33,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
   const NICHE_HUNTER_ENDPOINT = 'https://nichehunter-zydnejjbcq-uc.a.run.app';
   const DEFAULT_NICHE_PROMPT = 'high-RPM, advertiser-friendly niches spanning diverse categories';
 
-  // Calculate composite score for an idea
+  // Calculate composite score for an idea (robust to undefined/partial values)
   const calculateIdeaScore = (idea: Idea): number => {
     const weights = {
       af: 1,
@@ -46,11 +48,15 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
     } as const;
 
     const discrete =
-      idea.af * weights.af + idea.sp * weights.sp + idea.eg * weights.eg + idea.pp * weights.pp + idea.en * weights.en;
-    const saturationInverse = (2 - Math.max(0, Math.min(2, idea.st))) * weights.st;
-    const rpmComponent = Math.log10(Math.max(idea.rp, 0) + 1) * weights.rp;
-    const marketComponent = Math.log10(Math.max(idea.mk, 0) + 1) * weights.mk;
-    const volComponent = Math.log10(Math.max(idea.mv, 0) + 1) * weights.mv;
+      (idea?.af ?? 0) * weights.af +
+      (idea?.sp ?? 0) * weights.sp +
+      (idea?.eg ?? 0) * weights.eg +
+      (idea?.pp ?? 0) * weights.pp +
+      (idea?.en ?? 0) * weights.en;
+    const saturationInverse = (2 - (idea?.st ?? 0)) * weights.st;
+    const rpmComponent = Math.log10((idea?.rp ?? 0) + 1) * weights.rp;
+    const marketComponent = Math.log10((idea?.mk ?? 0) + 1) * weights.mk;
+    const volComponent = Math.log10((idea?.mv ?? 0) + 1) * weights.mv;
     return Number((discrete + saturationInverse + rpmComponent + marketComponent + volComponent).toFixed(3));
   };
 
@@ -68,26 +74,55 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
     setIsLoading(true);
     setError(null);
     setIdeas([]);
+    setTraces([]);
     try {
       const authToken = userSettings.getAuthToken();
       const userUid = user.uid;
 
-      const result = await runFlow({
+      const parsedLimit = Number.parseInt(limitValue, 10);
+      const limit = Number.isFinite(parsedLimit) ? Math.min(50, Math.max(1, parsedLimit)) : 10;
+
+      const result = streamFlow({
         url: NICHE_HUNTER_ENDPOINT,
         input: {
           niche: requestedNiche,
           strategy: 'nicheDown',
-          limit: 10,
+          limit,
           userUid,
           authToken,
         },
       });
 
-      const rawIdeas = (result as { ideas?: Idea[] }).ideas ?? [];
-      const scored = rawIdeas.map((i) => ({ ...i, score: calculateIdeaScore(i) })) as ScoredIdea[];
-      scored.sort((a, b) => b.score - a.score);
-      setIdeas(scored);
+      // Consume streaming chunks – backend sends { type: 'ideas', ideas: Idea[] } where the array grows over time
+      for await (const chunk of result.stream) {
+        try {
+          const json = JSON.parse(chunk);
+          console.log('Chunk:', json);
+          if (json.type === 'trace' && typeof json.trace === 'string') {
+            setTraces((prev) => [...prev, json.trace as string]);
+          } else if (json.type === 'output') {
+            const streamedIdeas = (json.output?.ideas ?? []) as Idea[];
+            const scored = streamedIdeas.map((i) => ({ ...i, score: calculateIdeaScore(i) })) as ScoredIdea[];
+            scored.sort((a, b) => b.score - a.score);
+            console.log('Scored:', scored);
+            setIdeas(scored);
+          }
+        } catch (_e) {
+          // ignore parse errors for robustness
+        }
+      }
+
+      // Fetch final output
+      const finalOutput = await result.output;
+      const finalIdeas = (finalOutput.ideas ?? []) as Idea[];
+      const scoredFinal = finalIdeas.map((i) => ({ ...i, score: calculateIdeaScore(i) })) as ScoredIdea[];
+      scoredFinal.sort((a, b) => b.score - a.score);
+      setIdeas(scoredFinal);
+      if (finalOutput.error) {
+        setError(finalOutput.error);
+      }
     } catch (err) {
+      console.error('Error:', err);
       const message = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(message);
     } finally {
@@ -109,6 +144,16 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
           onChange={(e) => setNiche(e.target.value)}
           disabled={isLoading}
         />
+        <InputGroup.Text>Limit</InputGroup.Text>
+        <Form.Control
+          type="number"
+          min={1}
+          max={50}
+          value={limitValue}
+          onChange={(e) => setLimitValue(e.target.value)}
+          disabled={isLoading}
+          style={{ maxWidth: 120 }}
+        />
         <Button variant="primary" onClick={handleGo} disabled={isLoading}>
           {isLoading ? (
             <span className="d-flex align-items-center gap-2">
@@ -125,7 +170,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
           {error}
         </Alert>
       )}
-      {!!ideas.length && !isLoading && (
+      {!!ideas.length && (
         <div className="mt-3">
           <Table striped bordered hover responsive>
             <thead>
@@ -145,22 +190,33 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
             </thead>
             <tbody>
               {ideas.map((idea, idx) => (
-                <tr key={`${idea.nm}-${idx}`}>
-                  <td>{idea.score}</td>
-                  <td>{idea.nm}</td>
-                  <td>{idea.rp}</td>
-                  <td>{idea.af}</td>
-                  <td>{idea.sp}</td>
-                  <td>{idea.mk}</td>
-                  <td>{idea.mv}</td>
-                  <td>{idea.st}</td>
-                  <td>{idea.eg}</td>
-                  <td>{idea.pp}</td>
-                  <td>{idea.en}</td>
+                <tr key={`${idea.nm ?? 'idea'}-${idx}`}>
+                  <td>{Number.isFinite(idea.score) ? idea.score : '-'}</td>
+                  <td>{idea.nm ?? '-'}</td>
+                  <td>{Number.isFinite(Number(idea.rp)) ? idea.rp : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.af)) ? idea.af : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.sp)) ? idea.sp : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.mk)) ? idea.mk : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.mv)) ? idea.mv : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.st)) ? idea.st : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.eg)) ? idea.eg : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.pp)) ? idea.pp : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.en)) ? idea.en : '-'}</td>
                 </tr>
               ))}
             </tbody>
           </Table>
+        </div>
+      )}
+      {!!traces.length && (
+        <div className="mt-3">
+          <Alert variant="secondary" className="mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            <ul className="ps-3">
+              {traces.map((trace, idx) => (
+                <li key={`trace-${idx}`}>{trace}</li>
+              ))}
+            </ul>
+          </Alert>
         </div>
       )}
     </div>
