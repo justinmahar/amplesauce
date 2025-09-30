@@ -15,4 +15,4 @@ export { setupUser } from './https/setupUser';
 // === Genkit endpoints === === === === === === === === === === === ===
 const geminiApiKey = defineSecret('GEMINI_API_KEY');
 export const prompt = onCallGenkit({ secrets: [geminiApiKey] }, geminiPromptFlow);
-export const nicheHunter = onCallGenkit({ secrets: [geminiApiKey] }, nicheHunterFlow);
+export const nicheHunter = onCallGenkit({ secrets: [geminiApiKey], timeoutSeconds: 120 }, nicheHunterFlow);
