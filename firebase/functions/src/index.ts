@@ -1,16 +1,17 @@
 import { onCallGenkit } from 'firebase-functions/https';
 import { defineSecret } from 'firebase-functions/params';
 import './genkit';
-import { promptFlow } from './genkit';
+import { promptFlow as geminiPromptFlow } from './genkit';
 
 // === Scheduled functions === === === === === === === === === === === ===
 // export * from './scheduled-functions';
 
 // === Auth endpoints === === === === === === === === === === === ===
+export { onDeleteUser } from './auth/onDeleteUser';
 
 // === Https endpoints === === === === === === === === === === === ===
-export * from './https-functions';
+export { setupUser } from './https/setupUser';
 
 // === Genkit endpoints === === === === === === === === === === === ===
 const geminiApiKey = defineSecret('GEMINI_API_KEY');
-export const prompt = onCallGenkit({ secrets: [geminiApiKey] }, promptFlow);
+export const prompt = onCallGenkit({ secrets: [geminiApiKey] }, geminiPromptFlow);

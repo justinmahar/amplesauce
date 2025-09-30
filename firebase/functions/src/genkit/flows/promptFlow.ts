@@ -19,7 +19,6 @@ export interface PromptFlowOutput {
   trace?: string[];
 }
 
-// Stubbed export: replace with defineFlow during implementation
 export const promptFlow = gemini.defineFlow(
   {
     name: 'promptFlow',

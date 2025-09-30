@@ -120,6 +120,10 @@ export class DocDataAccessor {
     return successful;
   }
 
+  public static async deleteDoc(uid: string, collectionPath: string): Promise<FirebaseFirestore.WriteResult> {
+    return firestore.doc(DocDataAccessor.getCollectionDocPath(collectionPath, uid)).delete();
+  }
+
   public static deleteField(): FieldValue {
     return FieldValue.delete();
   }

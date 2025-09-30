@@ -1,48 +1,15 @@
-import cors from 'cors';
 import { getAuth } from 'firebase-admin/auth';
 import { https } from 'firebase-functions/v1';
 import { StatusCodes } from 'http-status-codes';
-import { firestore } from './firebase/firebase-app';
-import { UserSettings } from './firestore/models/UserSettings';
-import { generalRateLimiter } from './firestore/rate-limiters/rate-limiters';
-import { utilityMain } from './operations/main';
-import { HttpsRequestResult } from './types/HttpsRequestResult';
+import { firestore } from '../firebase/firebase-app';
+import { UserSettings } from '../firestore/models/UserSettings';
+import { generalRateLimiter } from '../firestore/rate-limiters/rate-limiters';
+import { HttpsRequestResult } from '../types/HttpsRequestResult';
+import { handleCors } from './handleCors';
 
 // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 // --- HTTPS Functions --- --- --- --- --- --- --- --- --- --- ---
 // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-// For CORS support
-const handleCors = cors({ origin: true });
-
-/**
- * A utility function for miscellaneous tasks.
- */
-// export const doUtility = https.onRequest(async (request, response): Promise<void> => {
-//   handleCors(request, response, async () => {
-//     const httpResult = new HttpsRequestResult();
-//     try {
-//       await generalRateLimiter.rejectOnQuotaExceededOrRecordUsage(request.ip);
-//       try {
-//         // ==================
-//         // ==> MAIN OPERATION
-//         const opResult = await utilityMain();
-//         httpResult.addOp(opResult.operation);
-//         // ==================
-//       } catch (error) {
-//         httpResult.status = StatusCodes.INTERNAL_SERVER_ERROR;
-//         httpResult.error = `${error}`;
-//         httpResult.success = false;
-//       }
-//     } catch (error) {
-//       httpResult.status = StatusCodes.TOO_MANY_REQUESTS;
-//       httpResult.error = `Error: Too many requests. Please wait and try again.`;
-//       httpResult.success = false;
-//     }
-
-//     httpResult.send(response);
-//   });
-// });
 
 /**
  * Sets up a new user account.

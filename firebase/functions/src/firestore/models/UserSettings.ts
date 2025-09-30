@@ -133,4 +133,8 @@ export class UserSettings extends DocDataAccessor {
 
     return userSettingsSnap;
   };
+
+  public static deleteUserSettings = (uid: string): Promise<FirebaseFirestore.WriteResult> => {
+    return DocDataAccessor.deleteDoc(uid, UserSettings.getUserSettingsCollectionPath());
+  };
 }
