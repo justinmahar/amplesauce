@@ -9,8 +9,8 @@ siteMetadata:
   siteImageHeight: 630
   siteImageAlt: Monster eggs cracking open
 gatsbyPluginManifestOptions:
-  name: Wit Engine
-  shortName: Wit Engine # Max length 12
+  name: AmpleSauce
+  shortName: AmpleSauce # Max length 12
   startUrl: /
   themeColor: '#1167b1'
   backgroundColor: '#03254c'

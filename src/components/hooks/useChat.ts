@@ -3,7 +3,7 @@ import { runFlow } from 'genkit/beta/client';
 import { useUserAccountContext } from '../contexts/UserAccountProvider';
 import { useUserSettingsContext } from '../contexts/UserSettingsProvider';
 import { useSiteSettingsContext } from '../contexts/SiteSettingsProvider';
-import { VideoSchema } from '../genkit/ComedySchema';
+import { VideoSchema } from '../genkit/VideoSchema';
 
 // Types/Interfaces
 interface SendMessageArgs {
