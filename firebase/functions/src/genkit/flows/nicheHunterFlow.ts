@@ -59,20 +59,7 @@ export const nicheHunterFlow = gemini.defineFlow(
     }),
     streamSchema: z.string(),
     outputSchema: z.object({
-      ideas: z.array(
-        z.object({
-          nm: z.string().describe('Name of the subniche or related niche'),
-          rp: z.number().describe('Estimated RPM for monetized views'),
-          af: z.number().int().min(0).max(2).describe('Affiliate strength: 0=low,1=medium,2=high'),
-          sp: z.number().int().min(0).max(2).describe('Sponsorship strength: 0=low,1=medium,2=high'),
-          mk: z.number().describe('Estimated market size in thousands (K)'),
-          mv: z.number().describe('Estimated monthly YouTube search volume'),
-          st: z.number().int().min(0).max(2).describe('Saturation: 0=low,1=medium,2=high (higher = more saturated)'),
-          eg: z.number().int().min(0).max(2).describe('Evergreen: 0=low,1=medium,2=high'),
-          pp: z.number().int().min(0).max(2).describe('Purchase power: 0=low,1=medium,2=high'),
-          en: z.number().int().min(0).max(2).describe('Engagement: 0=low,1=medium,2=high'),
-        }),
-      ),
+      ideas: z.array(z.any()),
     }),
   },
   async (input, { sendChunk }): Promise<NicheHunterFlowOutput> => {
