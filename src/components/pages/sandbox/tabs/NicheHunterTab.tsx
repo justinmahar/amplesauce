@@ -3,6 +3,7 @@ import { Alert, Button, Form, InputGroup, Spinner, Table } from 'react-bootstrap
 import { streamFlow } from 'genkit/beta/client';
 import { useUserAccountContext } from '../../../contexts/UserAccountProvider';
 import { useUserSettingsContext } from '../../../contexts/UserSettingsProvider';
+import { useLocalStorage } from 'react-storage-complete';
 
 export type NicheHunterTabProps = Record<string, never>;
 
@@ -26,6 +27,10 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
   };
   type ScoredIdea = Idea & { score: number };
   const [ideas, setIdeas] = React.useState<ScoredIdea[]>([]);
+  const [storedIdeas, setStoredIdeas, ideasInitialized] = useLocalStorage<ScoredIdea[]>(
+    'sandbox.nicheHunter.ideas',
+    [],
+  );
 
   const { user } = useUserAccountContext();
   const { userSettings } = useUserSettingsContext();
@@ -106,6 +111,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
             scored.sort((a, b) => b.score - a.score);
             console.log('Scored:', scored);
             setIdeas(scored);
+            setStoredIdeas(scored);
           }
         } catch (_e) {
           // ignore parse errors for robustness
@@ -118,6 +124,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
       const scoredFinal = finalIdeas.map((i) => ({ ...i, score: calculateIdeaScore(i) })) as ScoredIdea[];
       scoredFinal.sort((a, b) => b.score - a.score);
       setIdeas(scoredFinal);
+      setStoredIdeas(scoredFinal);
       if (finalOutput.error) {
         setError(finalOutput.error);
       }
@@ -129,6 +136,13 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
       setIsLoading(false);
     }
   };
+
+  // Load from localStorage when available
+  React.useEffect(() => {
+    if (ideasInitialized && ideas.length === 0 && Array.isArray(storedIdeas) && storedIdeas.length > 0) {
+      setIdeas(storedIdeas);
+    }
+  }, [ideasInitialized, storedIdeas, ideas.length]);
 
   return (
     <div>

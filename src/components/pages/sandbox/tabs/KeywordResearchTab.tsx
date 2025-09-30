@@ -1,4 +1,5 @@
 import React, { JSX } from 'react';
+import { useLocalStorage } from 'react-storage-complete';
 import { Alert, Button, Form, InputGroup, Spinner, Table } from 'react-bootstrap';
 
 export type KeywordResearchTabProps = Record<string, never>;
@@ -10,6 +11,10 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const latestRequestIdRef = React.useRef(0);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const [storedSuggestions, setStoredSuggestions, suggestionsInitialized] = useLocalStorage<string[]>(
+    'sandbox.keywordResearch.suggestions',
+    [],
+  );
 
   const YT_AUTOCOMPLETE_ENDPOINT = 'https://clients1.google.com/complete/search';
 
@@ -82,43 +87,48 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     return [];
   };
 
-  const fetchSuggestionsAsync = React.useCallback(async (q: string, showEmptyError: boolean): Promise<void> => {
-    const query = q.trim();
-    if (!query) {
-      if (showEmptyError) {
-        setError('Please enter a keyword.');
-        setSuggestions([]);
+  const fetchSuggestionsAsync = React.useCallback(
+    async (q: string, showEmptyError: boolean): Promise<void> => {
+      const query = q.trim();
+      if (!query) {
+        if (showEmptyError) {
+          setError('Please enter a keyword.');
+          setSuggestions([]);
+        }
+        return;
       }
-      return;
-    }
 
-    const requestId = ++latestRequestIdRef.current;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const lang = (navigator?.language || 'en').split('-')[0] || 'en';
-      const baseUrl = `${YT_AUTOCOMPLETE_ENDPOINT}?client=youtube&ds=yt&hl=${encodeURIComponent(lang)}&q=${encodeURIComponent(query)}`;
-      const data = await loadJsonpAsync(baseUrl, 'callback');
-      if (requestId !== latestRequestIdRef.current) {
-        return; // stale response
+      const requestId = ++latestRequestIdRef.current;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const lang = (navigator?.language || 'en').split('-')[0] || 'en';
+        const baseUrl = `${YT_AUTOCOMPLETE_ENDPOINT}?client=youtube&ds=yt&hl=${encodeURIComponent(lang)}&q=${encodeURIComponent(query)}`;
+        const data = await loadJsonpAsync(baseUrl, 'callback');
+        if (requestId !== latestRequestIdRef.current) {
+          return; // stale response
+        }
+        const suggestionsList = parseSuggestions(data);
+        setSuggestions(suggestionsList);
+        setStoredSuggestions(suggestionsList);
+        inputRef.current?.focus();
+      } catch (err) {
+        if (requestId !== latestRequestIdRef.current) {
+          return; // stale response
+        }
+        const message = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(message);
+        setSuggestions([]);
+        setStoredSuggestions([]);
+        inputRef.current?.focus();
+      } finally {
+        if (requestId === latestRequestIdRef.current) {
+          setIsLoading(false);
+        }
       }
-      const suggestionsList = parseSuggestions(data);
-      setSuggestions(suggestionsList);
-      inputRef.current?.focus();
-    } catch (err) {
-      if (requestId !== latestRequestIdRef.current) {
-        return; // stale response
-      }
-      const message = err instanceof Error ? err.message : 'An unknown error occurred.';
-      setError(message);
-      setSuggestions([]);
-      inputRef.current?.focus();
-    } finally {
-      if (requestId === latestRequestIdRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, []);
+    },
+    [setStoredSuggestions],
+  );
 
   const handleGo = async (): Promise<void> => {
     await fetchSuggestionsAsync(keyword, true);
@@ -130,6 +140,12 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     }, 100);
     return () => clearTimeout(handle);
   }, [keyword, fetchSuggestionsAsync]);
+
+  React.useEffect(() => {
+    if (suggestionsInitialized && Array.isArray(storedSuggestions) && storedSuggestions.length > 0) {
+      setSuggestions(storedSuggestions);
+    }
+  }, [suggestionsInitialized, storedSuggestions]);
 
   return (
     <div>
