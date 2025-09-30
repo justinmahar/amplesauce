@@ -1,0 +1,48 @@
+siteMetadata:
+  siteName: AmpleSauce
+  siteUrl: 'https://amplesauce.netlify.app'
+  siteDescription: Best in class YouTube search automation.
+  siteIcon: /media/site-icon.png
+  siteIconAlt: Monster egg cracking open
+  siteImage: '{siteUrl}/media/site-image.jpeg'
+  siteImageWidth: 1200
+  siteImageHeight: 630
+  siteImageAlt: Monster eggs cracking open
+gatsbyPluginManifestOptions:
+  name: Wit Engine
+  shortName: Wit Engine # Max length 12
+  startUrl: /
+  themeColor: '#1167b1'
+  backgroundColor: '#03254c'
+  display: standalone
+  customIcon: none # '/media/pwa-icon.png'
+seoTitleFormat: '{contentTitle}{seoTitleSeparator}{siteName}' # See README for all template tags
+seoTitleSeparator: ' - '
+privatePagePathPrefix: private # Must not start or end with a slash
+sitemapExclude:
+  - /offline-plugin-app-shell-fallback
+  - /admin
+  - /template
+  - /password
+googleAnalyticsMeasurementId: none
+robotsDisallowed: false
+twitterSiteUsername: none
+redirects: # https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect
+  - fromPath: /old-url
+    toPath: /new-url
+    isPermanent: true
+cloudFunctionsRootLocal: http://localhost:5001/gatsby-launchpad/us-central1
+cloudFunctionsRootProduction: https://us-central1-gatsby-launchpad.cloudfunctions.net
+trackVisits: false
+googleFormContact:
+  formAction: 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSeVjA5_pgOzRmlsLX-ZwfEtBGPNB4oGa1YavCAilSV9Tc649g/formResponse'
+  subjectName: 'entry.1068365843'
+  messageName: 'entry.611318326'
+  originName: 'entry.1534237136'
+netlifyBadgeMarkdown: '[![Netlify Status](https://api.netlify.com/api/v1/badges/21f52584-91b7-4198-8ac7-827357fef04f/deploy-status)](https://app.netlify.com/sites/gatsby-launchpad/deploys)'
+sitePasswordHash: 'none'
+postLoginRoute: /profile
+edgeFunctionsRoot: https://amplesauce.netlify.app
+promptEndpoint: 'https://prompt-363n2a2xiq-uc.a.run.app'
+googleOauthClientId: '204739076247-bqneothhhrpu6aluf77cb6soonp3i1g9.apps.googleusercontent.com'
+headerHeight: 80

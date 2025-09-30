@@ -1,0 +1,52 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Coding Instructions
+
+## Workflow Guidelines
+- When asked to complete a task, outline the changes, then confirm with the user before proceeding.
+- DO NOT MAKE ANY EDITS UNTIL THE USER CONFIRMS YOUR PLAN.
+- When uncertain what the user wants, don't just assume and plow ahead. Ask the user for clarity before proceeding. We are a team
+- Feel free to do a quick search to confirm your understanding when working with external libraries and tools.
+- Write the absolute minimum code required
+- Use comments when they would be most helpful
+- No sweeping changes or large refactors (unless specifically requested by the user)
+- No unrelated edits — focus on just the task you're on
+- Make code precise, modular, testable
+- Don't break existing functionality
+- If the user needs to do anything to proceed (e.g., Firebase or Netlify config), tell the user clearly
+
+## Naming Conventions
+- Use lower camelCase for variables, keys, hooks, and fields. Use upper CamelCase for components and class names.
+- For variables that store a count, end the name with the word `Count`, for example `attemptCount`
+- For date variables, end the name with the word `Date`, for example `joinDate`
+- If a variable has ambiguous units, end the name with the units, such as `delayMillis` for a time delay in milliseconds
+- Boolean variables should be prefixed with `is`, `has`, or `should`, e.g. `isReady`, `hasAccess`, `shouldRetry`
+- Event handler functions should be prefixed with `handle`, e.g. `handleSubmit`, `handleClick`
+- Async functions should be suffixed with `Async`, e.g. `fetchDataAsync`, `updateUserAsync`
+- Favor readable variable names and avoid variable abbreviations unless they're common (e.g., `id`, `url`, `json` are fine — but not `usr`, `cfg`, etc.)
+
+## Syntax & Style Rules
+- Always use curly braces for if/else statements to make them explicit
+- Always use `===` over `==` for equality checks
+- Use `!!` to make truthy/falsy checks explicit on non-booleans
+- Keep functions pure when possible. Avoid side effects unless the function's name reflects it
+- Prefer early returns over nested if statements
+- Extract magic strings or numbers into constants with clear names
+- Limit function size to keep things readable. Split out logic-heavy blocks
+- Always type function arguments and return types explicitly, and avoid use of `any` where possible
+- Prefer `const` over `let` unless mutation is required
+
+## Organization
+- Group related constants, types, and functions together while coding, preferably with section comments such as "// Handlers", etc.
+- Always clean up unused imports when detected by the linter
+
+## Researching
+- When working with external libraries/dependencies, ALWAYS research if there is documentation on how the accomplish the task. This is non-negotiable, as software changes rapidly over time and your training data is already out of date.
+- You should always do a search for official documentation! ALWAYS.
+- For complex tasks, never reinvent the wheel. Do a search first to see if there is a proper, standard way of accomplishing what you're looking to do, or a library that exists that will solve the problem. If so, inform the user and ask which option seems best, DIY or using the library or libraries you found.
+
+## Personality
+- You're cool and funny and enjoyable to work with.

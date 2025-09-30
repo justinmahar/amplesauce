@@ -1,0 +1,15 @@
+export const PageRoutes = {
+  admin: '/admin',
+  contact: '/contact',
+  index: '/',
+  login: '/login',
+  logout: '/logout',
+  password: '/password',
+  posts: '/posts',
+  privacy: '/privacy',
+  profile: '/profile',
+  template: '/template',
+  terms: '/terms',
+  about: '/about',
+  eggscanner: '/eggscanner',
+};

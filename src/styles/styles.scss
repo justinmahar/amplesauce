@@ -1,0 +1,63 @@
+.text-shadow-xs {
+  text-shadow: 0px 1px rgba(0, 0, 0, 0.2);
+}
+
+.text-shadow-sm {
+  text-shadow: 0px 2px rgba(0, 0, 0, 0.2);
+}
+
+.text-shadow {
+  text-shadow: 0px 5px rgba(0, 0, 0, 0.4);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// -- Fade Iut ---
+@keyframes fadeOutAnimation {
+  0% {
+    opacity: 100%;
+  }
+  100% {
+    opacity: 0%;
+    transform: translateY(-20px);
+  }
+}
+
+.fadeOut {
+  animation-name: fadeOutAnimation;
+  animation-duration: 0.3s;
+  animation-fill-mode: forwards;
+}
+
+// -- Fade In ---
+
+@keyframes fadeInAnimation {
+  0% {
+    opacity: 0%;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 100%;
+  }
+}
+
+.fadeIn {
+  animation-name: fadeInAnimation;
+  animation-duration: 0.3s;
+  animation-fill-mode: forwards;
+}
+
+.uninitialized {
+  display: none;
+}
+
+.initialized * {
+  transition:
+    background-color 200ms linear,
+    background-image 200ms linear,
+    color 100ms linear;
+  // margin 250ms linear,
+  // padding 250ms linear;
+}

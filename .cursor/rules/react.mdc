@@ -1,0 +1,99 @@
+---
+description: 
+globs: *.tsx,*.ts
+alwaysApply: false
+---
+# React Coding Instructions
+
+- Use the following formats for React hooks and components.
+- Always use function components. Do not create older style class components.
+- Always export named consts. Do not export defaults.
+- Use best coding practices. Extract constants where possible.
+
+## UI Framework
+
+- Use `react-bootstrap` for all UI components (buttons, cards, dropdowns, etc), where possible
+- Use Bootstrap utility classes instead of custom CSS or creating styled-components, where possible. This minimizes the footprint.
+
+## Styling
+- Use Bootstrap utility classes over custom CSS where possible; use custom CSS as a last resort.
+- If custom CSS is needed (animations, styles that don't have util classes, etc):
+  - Consider adding styles to a styled component (via `styled-components`) defined in the same file, below the component
+  - If that's not an option, then add styles to [custom.scss](mdc:src/styles/styles.scss)
+  - Be sure to use best practices when writing CSS, and to add comments for non-obvious code
+
+## Function Component
+
+Instructions:
+- Use the template below for new components.
+- Where possible, the props should extend existing components matching the highest order element of the rendered component.
+  - For basic HTML components, use `react-html-props`. This library has aliases for all HTML props, each starts with the name of the element. For example, use DivProps for custom components if the wrapper is a div.
+  - For `react-bootstrap` components, extend the appropate props type (ButtonProps, CardProps, etc).
+- Be sure to keep a comment above each section as shown below (Constants, Types/Interfaces, State, etc) and to place code in the appropriate section where possible.
+- Only render `{props.children}` if it makes sense for the component. Remove this if the component is not intended to be given children.
+- Replace Example with the actual component name.
+- Name the component file after the main component it exports, such as `Example.tsx`.
+- Destructure custom props before `...props` and give the optional props fallback default values (if it makes sense to do so).
+
+```tsx
+import classNames from 'classnames';
+import React from 'react';
+import { DivProps } from 'react-html-props';
+
+// Constants
+
+// Types/Interfaces
+export interface ExampleProps extends DivProps {}
+
+/**
+ * Brief description of component.
+ */
+export const Example = ({ ...props }: ExampleProps) => {
+  // State
+
+  // Handlers
+
+  // Effects
+
+  // Consts for rendered elements (element arrays, sizes, etc)
+
+  // Render
+  return (
+    <div {...props} className={classNames(props.className)} style={{ ...props.style }}>
+      {props.children}
+    </div>
+  );
+};
+
+```
+
+## Hook
+
+- Use the template below for hooks.
+- Be sure to keep a comment above each section as shown below (Constants, Types/Interfaces, State, etc) and to place code in the appropriate section where possible.
+- Replace Example with the actual hook name. 
+- Name the hook file after the main hook it exports, such as `useExample.ts`.
+
+```ts
+import React from 'react';
+
+// Constants
+
+// Types/Interfaces
+
+/**
+ * Brief description of hook.
+ */
+export const useExample = () => {
+  // State
+
+  // Handlers
+
+  // Effects
+  React.useEffect(() => {
+    // This effect is an example. Remove if not needed.
+  }, []);
+  
+  // Return here if needed (remove, or add appropriate comment if returning)
+};
+```

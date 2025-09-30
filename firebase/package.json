@@ -1,0 +1,8 @@
+{
+  "name": "witengine-firebase",
+  "private": true,
+  "scripts": {
+    "deploy-rules": "firebase use default && firebase deploy --only firestore:rules",
+    "emulators": "firebase use default && cd functions && npm run build && cd .. && firebase emulators:start"
+  }
+}

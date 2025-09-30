@@ -1,0 +1,45 @@
+// Custom Bootstrap color overrides
+
+// 1. Define custom colors
+$primary: #5e2ca5; // A nice purple
+$secondary: #f5a623; // A vibrant orange
+$success: #7ed321; // A fresh green
+$info: #4a90e2; // A clear blue
+$warning: #f8e71c; // A bright yellow
+$danger: #d0021b; // A strong red
+$light: #f8f9fa;
+$dark: #23272b;
+
+// 3. Customize typography
+$font-family-sans-serif: 'Nunito Sans', sans-serif;
+$headings-font-family: 'Playfair Display', serif;
+
+// 4. Customize border radius
+$border-radius: 0.25rem;
+$border-radius-sm: 0.2rem;
+$border-radius-lg: 0.3rem;
+
+// 5. Import all of Bootstrap's SASS.
+// This will apply the overrides defined above.
+@import 'bootstrap/scss/bootstrap';
+
+// 6. Add custom borders to buttons and badges
+@each $color, $value in $theme-colors {
+  .btn-#{$color} {
+    border: 1px solid tint-color($value, 15%);
+  }
+
+  // This ensures that outline buttons also get the border on hover/active states
+  .btn-outline-#{$color} {
+    border: 1px solid $value;
+    &:hover,
+    &:active,
+    &.active {
+      border: 1px solid tint-color($value, 15%);
+    }
+  }
+
+  .badge.bg-#{$color} {
+    border: 1px solid tint-color($value, 15%);
+  }
+}

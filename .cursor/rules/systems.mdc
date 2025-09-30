@@ -1,0 +1,188 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Systems Editing Instructions 
+
+When making changes to this TypeScript Gatsby application, reference/use these instructions as appropriate.
+
+## Adding Pages
+
+- Add new JSX files to the src/pages directory.
+- The filename will be the route to the page. For example, src/pages/example.tsx would create a page at the route /example.
+- Each page should have a corresponding page component. Use the [DefaultTemplatePage.tsx](mdc:src/components/pages/DefaultTemplatePage.tsx) component as a template to start from. Add the page to `src/components/pages`.
+- Add a corresponding route matching the page filename in /pages to the [PageRoutes.ts](mdc:src/components/pages/PageRoutes.ts) file.
+- Note that the template [CreatePageTemplate.tsx](mdc:src/components/pages/CreatePageTemplate.tsx) is to be referenced as a template when programmatically generating pages via the Gatsby node API. In that case, you should create a corresponding `.js` file in the `src/components/pages/js` dir (see [CreatePageTemplate.js](mdc:src/components/pages/js/CreatePageTemplate.js)) and then provide that JS file to Gatsby. This is not the same as making a basic page, in which case just use [DefaultTemplatePage.tsx](mdc:src/components/pages/DefaultTemplatePage.tsx).
+
+## Site Settings
+
+- Many of the site settings can be configured via the YAML file [settings.yml](mdc:src/settings/settings.yml) 
+- This contains configurations for the site metadata (name, description, image, icon, etc), Google Analytics, contact form (Google Forms), and other static settings that should apply to the entire site/app.
+- Settings added should have corresponding code in the [useSiteSettings.ts](mdc:src/settings/useSiteSettings.ts) hook. The shapes of settings.yml, SiteSettingsQuery in the hook, and the SiteSettingsData type in the hook, must all be the same.
+- You can get site settings via the context `useSiteSettingsContext` in [SiteSettingsProvider.tsx](mdc:src/components/contexts/SiteSettingsProvider.tsx)
+
+## Routing and Navigation
+
+- Page routes are configured in [PageRoutes.tsx](mdc:src/components/pages/PageRoutes.tsx) 
+- These should match the filenames in /pages and can be referenced throughout the project to avoid hardcoding routes.
+
+## Layout
+
+- A basic layout has been defined in [Layout.tsx](mdc:src/components/layout/Layout.tsx) This can be used in all pages to add a Header and Footer. Use the Body component for page contents.
+- These components provide a starting point and can be customized to fit the needs of the application. Bear in mind that modifying them will affect all pages that use them.
+- Pages can opt not to use the Layout and Body wrappers if both a Header and Footer and general Body are not desired.
+
+## Stylesheets
+
+- Custom styles can be defined in [styles.scss](mdc:src/styles/styles.scss)
+- However, it's recommended to use Bootstrap's built-in styles (variants and utility classes) instead of defining custom styles.
+- If you need to do something custom, see if you can accomplish it with styled-components, which has been included in this project, in order to localize the styles to the component you're styling only.
+- Define styles in custom.scss only as a last resort.
+
+## React-Icons
+
+- This project includes the react-icons npm project, which contains thousands of icons that can be used in this project.
+- Unless specified otherwise, use the Font Awesome icons bundled in this library. 
+- You can use an icon from a different set in react-icons if the desired icon isn't available through Font Awesome.
+
+## Firestore
+
+- This project contains support for Google Firestore. 
+- All Firestore models are located in `src/components/firebase/firestore/models`
+- There is a Firestore Active Record–style ORM base class, meant to be subclassed per document type, called [DocDataAccessor.ts](mdc:src/components/firebase/firestore/models/DocDataAccessor.ts) This abstracts Firestore logic. Subclasses have getters and setters for the data. DocDataAccessor has many useful static functions for CRUD operations as well as other utilities. Be sure to reference this while working with Firestore.
+- A template example subclass is available at [Example.ts](mdc:src/components/firebase/firestore/models/Example.ts) for creating new models.
+  - Fields are added to the enum, data interface, and defaults, and are given a getter and a setter which are added above the static functions.
+  - Loader hooks are exported that make it easy to load a single document or collection of documents. Create and use these where possible. Otherwise, leverage the `react-firebase-hooks` library.
+  - Loader hooks use the [useDocLoader.ts](mdc:src/components/firebase/firestore/useDocLoader.ts) and [useCollectionLoader.ts](mdc:src/components/firebase/firestore/useCollectionLoader.ts) hooks to make loading easy. Both of those are given a create function that tells them how to construct an instance of each model.
+  - Both loader hooks return either a `DocLoader<T>` or `CollectionLoader<T>`. Use these when accessing models. The loader object contains `model` or `models`, `loading`, `snapshot`, and `error`.
+  - If creating a new model, "Example" should be renamed to the actual model name.
+  - If nested within a subcollection, the constructor, create function, and hook(s) should all take the parent doc UID as an additional parameter. 
+  - If nested as a subcollection, `getExampleCollectionPath` should return a path that includes the nested parent path, and this function should take doc uid arg(s) for the parent(s). As such, the `super()` call in the constructor should be updated to include the correct call to get the collection path by passing the parent uid arg(s) from the constructor to `getExampleCollectionPath(parentUid)`. Where possible, name the parent args properly (i.e. `userUid` instead of `parentUid` if the parent doc is a user).
+- The Firestore schema is stored in [SCHEMA.MD](mdc:firebase/SCHEMA.MD). If any changes are made to the schema, this file must be updated to reflect the changes.
+
+## Hooks
+
+- Store hooks in the src/custom/hooks directory. This already contains some useful hooks.
+- Feel free to group related hooks together in a subfolder in src/custom/hooks.
+
+## Utils
+- For creating utility functions, add them the `src/components/utils` directory.
+  - For simple utils (such as a function for capitalizing strings), add them here.
+  - When a more robust solution is needed, consider installing an npm package. Inform the user before doing this, and also, check [package.json](mdc:package.json) if what you need is already there first.
+- Core includes gravatar utils in `src/components/misc/gravatar.ts`.
+
+## Contexts
+- This app includes an app-wide context provider, [AppProvider.tsx](mdc:src/components/contexts/AppProvider.tsx), that makes several contexts available.
+- All pages are automatically wrapped in this provider via the Gatsby browser API.
+- See below for the available contexts.
+
+### Local Settings Context
+
+- Local settings are stored in the current browser's localStorage. These settings persist between page loads and are unique for every logged in user.
+- The local settings context in [LocalSettingsProvider.tsx](mdc:src/components/contexts/LocalSettingsProvider.tsx) provides a way to access local settings from anywhere in the app.
+- Use the `useLocalSettingsContext` hook in [LocalSettingsProvider.tsx](mdc:src/components/contexts/LocalSettingsProvider.tsx) to access local settings, and define custom ones in [LocalSettings.ts](mdc:src/components/firebase/firestore/models/LocalSettings.ts)
+- When defining a new local setting in [LocalSettings.ts](mdc:src/components/firebase/firestore/models/LocalSettings.ts): 
+  1. Add the key to `LocalSettingsKeys`
+  2. Add a default to `LocalSettingsDefaults`
+  3. In the return object for useLocalSettings, return an additional key/value pair.
+  4. The key is the key specifed in `LocalSettingsKeys` and the value is the `useLocalStorage` hook. If the type is ambiguous (such as undefined default value), use a type parameter like so: useLocalStorage<T>. For example: useLocalStorage<string | undefined>
+- Bear in mind that useLocalStorage will return your defined type, `null`, or `undefined`! This is a constraint of using the hook, so be sure to account for `null` and `undefined` when using local settings or you will get errors.
+- The signature for useLocalStorage is:
+
+  useLocalStorage<T>(
+    key: string,
+    defaultWhenUndefined: T | null | undefined,
+    options: StorageOptions<T>,
+  ) => [value, setValue, initialized, clear, prefixedKey]
+
+- The return for useLocalStorage is an array containing:
+  1. value - T | null | undefined - The value of type T (the type of data you're storing) retrieved from localStorage, or the default (if provided to hook) when undefined.
+  2. setValue - (value: T | null | undefined) ⇒ void - Sets the stored value to localStorage. This also notifies other hooks of the change via the emitter when emitterDisabled option is false.
+  3. initialized - boolean - This is true when the value is initialized and ready to read. Only false when shouldInitialize option is false.
+  4. clear - () => void - Delete the value from localStorage.
+  5. prefixedKey - string - The prefixed key. This is the prefix (if provided to the hook) plus the prefix separator plus the key. Will be just the key if no prefix (or empty string prefix) is provided.
+
+#### Local User Settings vs Local Global Settings
+
+- The `useLocalStorage` hook has a defined `storageOptions` arg that adds the user's uid as a prefix to all stored variables. Use `storageOptions` to scope the local settings to the logged in user.
+- For settings that are not to be scoped to a user (logged out/global), do not pass `storageOptions` to `useLocalStorage`.
+
+### User Settings Context
+- User settings are stored in the current user's Firestore database settings document, located in /users/USER_UID in the database. Unlike local settings, these settings are available from any logged in browser.
+- The user settings context [UserSettingsProvider.tsx](mdc:src/components/contexts/UserSettingsProvider.tsx) provides a way to access a user's settings from anywhere in the app.
+- Use `useUserSettingsContext` from [UserSettingsProvider.tsx](mdc:src/components/contexts/UserSettingsProvider.tsx) to access account-wide user settings, and define custom ones in [UserSettings.ts](mdc:src/components/firebase/firestore/models/UserSettings.ts).
+- When defining a new user setting in [UserSettings.ts](mdc:src/components/firebase/firestore/models/UserSettings.ts): 
+  1. Add a name for the setting field in the `UserSettingsFields` enum
+  2. Define the setting field type in the `UserSettingsData` interface
+  3. Add a default value to `UserSettingsDefaults`
+  4. Add a getter and setter for the field above the static functions.
+- For getters/setters:
+  - If it's a date, use the following (replace `xxxxxDate` with the actual field name):
+    public getXxxxxDate = (): Date => {
+      return this.getDateValue(
+        this.getData()[UserSettingsFields.xxxxxDate],
+        UserSettings.DEFAULTS[UserSettingsFields.xxxxxDate] ?? new Date(0),
+      );
+    };
+    public setXxxxxDate = (xxxxxDate: Date): Promise<boolean> => {
+      return this.update({ [UserSettingsFields.xxxxxDate]: xxxxxDate });
+    };
+  - For all other types, use the following (replace `xxxxx` and `T` with the actual field name and type):
+    public getXxxxx = (): T => {
+      return this.getValue(this.getData()[UserSettingsFields.xxxxx], UserSettings.DEFAULTS[UserSettingsFields.xxxxx]);
+    };
+    public setXxxxx = (xxxxx: T): Promise<boolean> => {
+      return this.update({ [UserSettingsFields.xxxxx]: xxxxx });
+    };
+  - If it's a boolean, use `isXxxxx`/`setXxxxx` instead of `getIsXxxxx`/`setIsXxxxx`.
+
+### Global State Context
+- Global state can be accessed from anywhere in the application, and can be used for state that must be available app-wide. It should be used sparingly as it causes the entire app to rerender. This state does not persist between page loads.
+- Use the `useGlobalStateContext` hook from [GlobalStateProvider.tsx](mdc:src/components/contexts/GlobalStateProvider.tsx) to access and define global state.
+- State should be defined in the `GlobalStateValue` interface, and have a default set in `defaultState.value`.
+
+### Events Context
+- This app includes an event emitter that can be used to communicate between components. It's a way to keep components cleanly separated.
+- You can define new events in src/events, and there is a template event present to start from at [TemplateEvent.ts](mdc:src/components/events/TemplateEvent.ts). Make a copy of this file, name it XxxxxxxEvent, and replace xxxxxxx with the actual event name in the filename and in the file itself.
+- For the event's `fire()` function, you can pass additional args through to the emitter if you need to, but only if necessary.
+- To fire an event, get the event emitter with `useEventEmitterContext` from [EventEmitterProvider.tsx](mdc:src/components/contexts/EventEmitterProvider.tsx), and call `fire()` for the desired event, passing the emitter as the first arg (and additional args if needed). 
+- A listener elsewhere in another component or a mediator can listen for the event and handle it.
+
+### Site Settings Context
+- The site's settings (metadata, etc) are available via the context `useSiteSettingsContext` in [SiteSettingsProvider.tsx](mdc:src/components/contexts/SiteSettingsProvider.tsx). These are immutable at runtime.
+
+### User Account Context
+- The user account is available via `useUserAccountContext` from [UserAccountProvider.tsx](mdc:src/components/contexts/UserAccountProvider.tsx).
+- For just the user object itself, you can use the `useUser` convenience hook from UserAccountProvider.
+- Note that this hook is for the account itself (Firebase object). For user settings, use `useUserSettingsContext` from [UserSettingsProvider.tsx](mdc:src/components/contexts/UserSettingsProvider.tsx).
+
+## Mediator Pattern
+
+- For app-wide modals, and other app wide state management and event handling, consider using a mediator component for your handler effect and rendering.
+- If you are handling an event from a component (such as showing settings modal), first, create a new event using the event template and give it an appropriate name. Then, fire the event from in your component, and then handle the event in the mediator.
+- You should then create either a hook (logic only) or a component (if there's something to render) to separate the logic, then add it to AppMediator. For example, you might have a `SettingsMediator` component for handing a settings event and showing a modal (you would then render `SettingsMediator` in `AppMediator`), or a `useFetchWeather` hook for handling a weather event that retrieves data and sets it to the global state (you would call this in the mediator).
+- If there's a case to be made for creating an entirely new mediator component or mediator hook (different scope), by all means, propose this to the user.
+
+## Modals
+
+- When creating modals, use the [TemplateModal.tsx](mdc:src/components/modals/TemplateModal.tsx) template. Create a copy and name it to XxxxxModal, and rename `OKCancelModal` to XxxxxModal, where Xxxxx is the actual name. Be sure to place this in custom, not core.
+- `okHandler` and `cancelHandler` are placeholders for common circumstances. You may want to rename these, add another, or remove one completely. For example, you could rename Cancel to Close, okHandler to deleteHandler, etc (it depends on the circumstance).
+- Handlers could be processed locally in the modal (such as cancel/close), or outside by passing them in. It depends on the circumstance; choose the design that makes the most sense.
+- Ensure that at least one button receives focus via the `focusButtonRef` in the template when the modal is shown. Default to the most appropriate non-destructive option. If it makes more sense UX-wise to give a field focus and select all text (such as with a rename modal), then change `focusButtonRef` and its effect accordingly. In short, the modal should give something focus to help the user out.
+- Be sure to conditionally render modals, like so:
+  {showMyModal && <MyModal show={showMyModal} setShow={setShowMyModal} /> }
+
+## Query Params
+
+- Use the `react-use-query-param-string` npm library for query (or search) params in React. 
+- The signature of the hook is: `useQueryParamString(key: string, defaultValue: string, clearOnDefault?: boolean) => [value, setValue, initialized, clear]`
+- `clearOnDefault` is `true` when unspecified (generally the desired behavior)
+
+## Firebase Backend
+
+- All firebase backend code and rules are located in `/firebase`
+- Firebase functions are located in `/firebase/functions` and are defined in [index.ts](mdc:firebase/functions/src/index.ts).
+- A copy of all models that can be accessed from the backend exists in `firebase/functions/src/*/firestore`, such as [UserSettings.ts](mdc:firebase/functions/src/firestore/models/UserSettings.ts)
+- When making changes to models on the frontend (such as adding new fields), be sure to update the corresponding model on the backend, which uses a backend-specific implementation of [DocDataAccessor.ts](mdc:src/components/firebase/firestore/models/DocDataAccessor.ts) which (mostly) abstracts away the differences.
+- If you need to create an entirely new model for access via the backend, use [UserSettings.ts](mdc:firebase/functions/src/firestore/models/UserSettings.ts) as a reference.
