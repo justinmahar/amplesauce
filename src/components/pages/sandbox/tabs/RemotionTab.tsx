@@ -182,7 +182,7 @@ const DemoComposition: React.FC<DemoProps> = ({ titleFont, subtitleFont, emojiCh
         >
           <Video
             src={
-              'https://firebasestorage.googleapis.com/v0/b/ample-sauce.firebasestorage.app/o/uploads%2Fsandbox%2Fvideos%2Fdark-ocean-surface-ocean-looped-animation-2025-08-29-10-10-45-utc.mov?alt=media&token=fc4dbbee-301c-47ac-a194-f739382a2ba9'
+              'https://firebasestorage.googleapis.com/v0/b/ample-sauce.firebasestorage.app/o/uploads%2Fsandbox%2Fvideos%2Fdark-ocean-surface-ocean-looped-animation-2025-08-29-10-10-45-utc.mp4?alt=media&token=1c785fcc-3202-4a41-9546-5dd5e802908c'
             }
             muted
             style={{ width: '100%', height: '100%' }}
