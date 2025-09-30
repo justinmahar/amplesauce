@@ -99,7 +99,7 @@ export const BasicFooterSection = ({ ...props }: BasicFooterSectionProps) => {
                       <a
                         className={classNames(textColorClass, 'nav-link fw-bold text-decoration-none text-center')}
                         role="button"
-                        href="https://console.firebase.google.com/u/0/project/wit-engine/overview"
+                        href="https://console.firebase.google.com/u/0/project/ample-sauce/overview"
                         target="_blank"
                         rel="noopener noreferrer"
                       >

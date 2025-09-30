@@ -43,6 +43,6 @@ netlifyBadgeMarkdown: '[![Netlify Status](https://api.netlify.com/api/v1/badges/
 sitePasswordHash: 'none'
 postLoginRoute: /profile
 edgeFunctionsRoot: https://amplesauce.netlify.app
-promptEndpoint: 'https://prompt-363n2a2xiq-uc.a.run.app'
+promptEndpoint: https://prompt-zydnejjbcq-uc.a.run.app
 googleOauthClientId: '204739076247-bqneothhhrpu6aluf77cb6soonp3i1g9.apps.googleusercontent.com'
 headerHeight: 80

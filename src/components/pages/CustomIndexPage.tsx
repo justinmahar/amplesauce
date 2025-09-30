@@ -7,6 +7,7 @@ import Head from '../layout/Head';
 import { SectionBackground } from '../sections/parts/SectionBackground';
 import { useChat } from '../hooks/useChat';
 import Markdown from 'react-markdown';
+import { VideoSchema } from '../genkit/VideoSchema';
 
 export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.Element {
   const contentTitle = 'Home';
@@ -27,7 +28,7 @@ export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.E
     Generate an example video.
     `;
 
-    void sendMessage({ prompt });
+    void sendMessage({ prompt, schema: JSON.stringify(VideoSchema) });
   };
 
   return (
@@ -64,9 +65,9 @@ export default function CustomIndexPage(_props: PageProps<unknown>): React.JSX.E
               )}
               {!!response && !isLoading && (
                 <Alert variant="secondary" className="mt-2 mb-0">
-                  {response.output.message && (
+                  {response.output?.message && (
                     <p>
-                      <Markdown>{response.output.message}</Markdown>
+                      <Markdown>{response.output?.message}</Markdown>
                     </p>
                   )}
                   <pre className="mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

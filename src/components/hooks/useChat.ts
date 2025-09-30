@@ -8,6 +8,7 @@ import { VideoSchema } from '../genkit/VideoSchema';
 // Types/Interfaces
 interface SendMessageArgs {
   prompt?: string;
+  schema?: string;
 }
 
 export interface GenkitChatStreamResponse {

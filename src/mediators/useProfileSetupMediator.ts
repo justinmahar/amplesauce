@@ -3,7 +3,7 @@ import { useSiteSettingsContext } from '../components/contexts/SiteSettingsProvi
 import { useUserSettingsContext } from '../components/contexts/UserSettingsProvider';
 import { useUser } from '../components/contexts/UserAccountProvider';
 
-const setupUserEndpoint = 'https://us-central1-wit-engine.cloudfunctions.net/setupUser';
+const setupUserEndpoint = 'https://us-central1-ample-sauce.cloudfunctions.net/setupUser';
 
 export const useProfileSetupMediator = () => {
   const siteSettings = useSiteSettingsContext();
