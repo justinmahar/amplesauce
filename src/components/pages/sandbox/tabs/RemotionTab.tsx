@@ -1,6 +1,7 @@
 import React, { JSX } from 'react';
+import { Form } from 'react-bootstrap';
 import { Player } from '@remotion/player';
-import { AbsoluteFill, useCurrentFrame, interpolate, Easing, Sequence, Audio } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, interpolate, Easing, Sequence, Audio, Video } from 'remotion';
 import { EmojiKitName, getEmojiImageUrl } from '../../../utils/emoji';
 import { Gradients } from '../../../misc/Gradients';
 
@@ -19,17 +20,56 @@ const GradientMagic = {
 const width = 3840; // 4K UHD width
 const height = 2160; // 4K UHD height
 const fps = 30;
-const durationInFrames = fps * 6; // 6s
+const durationInFrames = fps * 9; // total duration (3s video + 6s titles)
+// Google Fonts configuration (easily configurable)
+const DEFAULT_TITLE_FONT = 'Inter';
+const DEFAULT_SUBTITLE_FONT = 'Outfit';
+const COMMON_GOOGLE_FONTS = [
+  'Inter',
+  'Outfit',
+  'Poppins',
+  'Montserrat',
+  'Roboto',
+  'Open Sans',
+  'Lato',
+  'Nunito',
+  'Source Sans 3',
+  'Work Sans',
+  'Playfair Display',
+  'Merriweather',
+];
+
+const ensureGoogleFontsLoaded = (families: string[]): void => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  const id = `google-fonts-${families.join('-').toLowerCase().replace(/\s+/g, '-')}`;
+  if (document.getElementById(id)) {
+    return;
+  }
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  // Request bold/regular weights commonly used
+  const params = families.map((f) => `family=${encodeURIComponent(f)}:wght@300;400;600;700;800;900`).join('&');
+  link.href = `https://fonts.googleapis.com/css2?${params}&display=swap`;
+  document.head.appendChild(link);
+};
+
 const TitleScreen = ({
   bgStyle,
   title,
   subtitle,
   opacity,
+  titleFont,
+  subtitleFont,
 }: {
   bgStyle: React.CSSProperties;
   title: string;
   subtitle: string;
   opacity: number;
+  titleFont: string;
+  subtitleFont: string;
 }) => {
   const frame = useCurrentFrame();
   // Scale relative to 4K canvas (3840x2160)
@@ -47,8 +87,6 @@ const TitleScreen = ({
       style={{
         ...bgStyle,
         color: '#fff',
-        fontFamily:
-          'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji"',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -56,23 +94,52 @@ const TitleScreen = ({
       }}
     >
       <div style={{ textAlign: 'center', transform: `translateY(${lift}px)` }}>
-        <div style={{ fontSize: 288 * unit, fontWeight: 800 }}>{title}</div>
-        <div style={{ fontSize: 112 * unit, marginTop: 16 * unit, opacity: 0.9 }}>{subtitle}</div>
+        <div
+          style={{
+            fontFamily: `${titleFont}, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji"`,
+            fontSize: 288 * unit,
+            fontWeight: 800,
+          }}
+        >
+          {title}
+        </div>
+        <div
+          style={{
+            fontFamily: `${subtitleFont}, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji"`,
+            fontSize: 112 * unit,
+            marginTop: 16 * unit,
+            opacity: 0.9,
+            fontWeight: 600,
+          }}
+        >
+          {subtitle}
+        </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-const DemoComposition: React.FC = () => {
+type DemoProps = { titleFont: string; subtitleFont: string; emojiChar: string };
+
+const DemoComposition: React.FC<DemoProps> = ({ titleFont, subtitleFont, emojiChar }) => {
   const frame = useCurrentFrame();
-  const crossStart = fps * 2.7;
-  const crossEnd = fps * 3.3;
-  const bookEmojiUrl = React.useMemo(() => getEmojiImageUrl(EmojiKitName.notoEmoji, '📖'), []);
+  // Intro video duration: 3 seconds
+  const videoDurationFrames = fps * 3;
+  // Crossfade between screens, offset to happen after the intro video
+  const crossStart = videoDurationFrames + fps * 2.7;
+  const crossEnd = videoDurationFrames + fps * 3.3;
+  const bookEmojiUrl = React.useMemo(() => getEmojiImageUrl(EmojiKitName.notoEmoji, emojiChar || '📖'), [emojiChar]);
   // Global scaling unit based on 4K canvas
   const baseWidth = 3840;
   const baseHeight = 2160;
   const unit = React.useMemo(() => Math.min(width / baseWidth, height / baseHeight), []);
-  const screen1Opacity =
+
+  // Load Google Fonts for the selected families
+  React.useEffect(() => {
+    ensureGoogleFontsLoaded([titleFont, subtitleFont]);
+  }, [titleFont, subtitleFont]);
+  // Title 1 fades in overlapping with the end of the intro video, then later fades out at crossStart→crossEnd
+  const title1Visible =
     frame < crossStart
       ? 1
       : frame > crossEnd
@@ -82,6 +149,13 @@ const DemoComposition: React.FC = () => {
             extrapolateLeft: 'clamp',
             extrapolateRight: 'clamp',
           });
+  const overlapFrames = Math.round(fps * 0.6);
+  const title1FadeIn = interpolate(frame, [videoDurationFrames - overlapFrames, videoDurationFrames], [0, 1], {
+    easing: Easing.out(Easing.cubic),
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  const screen1Opacity = title1Visible * title1FadeIn;
   const screen2Opacity =
     frame < crossStart
       ? 0
@@ -95,17 +169,41 @@ const DemoComposition: React.FC = () => {
 
   return (
     <AbsoluteFill>
+      {/* Intro video, 3 seconds, then fades out */}
+      <Sequence from={0} durationInFrames={videoDurationFrames}>
+        <AbsoluteFill
+          style={{
+            opacity: interpolate(frame, [videoDurationFrames - Math.round(fps * 0.5), videoDurationFrames], [1, 0], {
+              easing: Easing.inOut(Easing.cubic),
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+            }),
+          }}
+        >
+          <Video
+            src={
+              'https://firebasestorage.googleapis.com/v0/b/ample-sauce.firebasestorage.app/o/uploads%2Fsandbox%2Fvideos%2Fdark-ocean-surface-ocean-looped-animation-2025-08-29-10-10-45-utc.mov?alt=media&token=fc4dbbee-301c-47ac-a194-f739382a2ba9'
+            }
+            muted
+            style={{ width: '100%', height: '100%' }}
+          />
+        </AbsoluteFill>
+      </Sequence>
       <TitleScreen
         bgStyle={GradientMagic.blueCirclesStyle}
         title="AmpleSauce"
         subtitle="Automate research. Ship faster."
         opacity={screen1Opacity}
+        titleFont={titleFont}
+        subtitleFont={subtitleFont}
       />
       <TitleScreen
         bgStyle={GradientMagic.purpleBubblesStyle}
         title="Remotion Demo"
         subtitle="Two-screen crossfade inside @remotion/player"
         opacity={screen2Opacity}
+        titleFont={titleFont}
+        subtitleFont={subtitleFont}
       />
       {/* Emoji pop-up on second slide */}
       <AbsoluteFill
@@ -163,11 +261,46 @@ const DemoComposition: React.FC = () => {
 };
 
 export const RemotionTab = (_props: RemotionTabProps): JSX.Element => {
+  const [titleFont, setTitleFont] = React.useState<string>(DEFAULT_TITLE_FONT);
+  const [subtitleFont, setSubtitleFont] = React.useState<string>(DEFAULT_SUBTITLE_FONT);
+  const [emojiChar, setEmojiChar] = React.useState<string>('📖');
   return (
     <div>
       <h2 className="mb-3">Remotion</h2>
+      <div className="mb-3 d-flex gap-3 flex-wrap align-items-end">
+        <Form.Group controlId="titleFontSelect">
+          <Form.Label className="mb-1">Title Font</Form.Label>
+          <Form.Select value={titleFont} onChange={(e) => setTitleFont(e.target.value)} style={{ minWidth: 220 }}>
+            {COMMON_GOOGLE_FONTS.map((f) => (
+              <option key={`title-${f}`} value={f}>
+                {f}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+        <Form.Group controlId="subtitleFontSelect">
+          <Form.Label className="mb-1">Subtitle Font</Form.Label>
+          <Form.Select value={subtitleFont} onChange={(e) => setSubtitleFont(e.target.value)} style={{ minWidth: 220 }}>
+            {COMMON_GOOGLE_FONTS.map((f) => (
+              <option key={`subtitle-${f}`} value={f}>
+                {f}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+        <Form.Group controlId="emojiCharInput">
+          <Form.Label className="mb-1">Emoji</Form.Label>
+          <Form.Control
+            value={emojiChar}
+            onChange={(e) => setEmojiChar(e.target.value)}
+            placeholder="Emoji (e.g., 📖)"
+            style={{ width: 100 }}
+          />
+        </Form.Group>
+      </div>
       <Player
         component={DemoComposition}
+        inputProps={{ titleFont, subtitleFont, emojiChar }}
         durationInFrames={durationInFrames}
         compositionWidth={width}
         compositionHeight={height}

@@ -11,7 +11,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
   const [niche, setNiche] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [limitValue, setLimitValue] = React.useState<string>('10');
+  const [limitValue, setLimitValue] = React.useState<string>('50');
   const [traces, setTraces] = React.useState<string[]>([]);
   type Idea = {
     nm?: string;
