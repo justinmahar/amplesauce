@@ -9,5 +9,6 @@ import { gemini } from './config';
 export { authenticateUserFlow } from './flows/authenticateUserFlow';
 export { getGeminiConfigFlow } from './flows/getGeminiConfigFlow';
 export { promptFlow as promptFlow } from './flows/promptFlow';
+export { nicheHunterFlow } from './flows/nicheHunterFlow';
 
 // Tools
