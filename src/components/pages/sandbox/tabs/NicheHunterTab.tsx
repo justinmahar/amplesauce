@@ -1,10 +1,24 @@
 import React, { JSX } from 'react';
-import { Alert, Button, Form, InputGroup, Spinner, Table, Badge, Accordion } from 'react-bootstrap';
+import {
+  Alert,
+  Button,
+  Form,
+  InputGroup,
+  Spinner,
+  Table,
+  Badge,
+  Accordion,
+  OverlayTrigger,
+  Tooltip,
+} from 'react-bootstrap';
 import { streamFlow } from 'genkit/beta/client';
 import { useUserAccountContext } from '../../../contexts/UserAccountProvider';
 import { useUserSettingsContext } from '../../../contexts/UserSettingsProvider';
 import { useLocalStorage } from 'react-storage-complete';
 import { FaQuestionCircle, FaCheckCircle } from 'react-icons/fa';
+import { useSandboxTab } from '../../../hooks/useSandboxTab';
+import { useKeywordSearchState } from '../../../hooks/useKeywordSearchState';
+import { useContentResearchState } from '../../../hooks/useContentResearchState';
 
 export type NicheHunterTabProps = Record<string, never>;
 
@@ -27,6 +41,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
     eg?: number;
     pp?: number;
     en?: number;
+    kw?: string;
   };
   type ScoredIdea = Idea & { score: number };
   const [ideas, setIdeas] = React.useState<ScoredIdea[]>([]);
@@ -37,9 +52,12 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
 
   const { user } = useUserAccountContext();
   const { userSettings } = useUserSettingsContext();
+  const { setTab } = useSandboxTab();
+  const { setKeyword } = useKeywordSearchState();
+  const { setIdea } = useContentResearchState();
 
   const NICHE_HUNTER_ENDPOINT = 'https://nichehunter-zydnejjbcq-uc.a.run.app';
-  const DEFAULT_NICHE_PROMPT = 'high-RPM, advertiser-friendly niches spanning diverse categories';
+  const DEFAULT_NICHE_PROMPT = 'viable niches spanning diverse categories';
 
   // Calculate composite score for an idea (robust to undefined/partial values)
   const calculateIdeaScore = (idea: Idea): number => {
@@ -105,14 +123,12 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
       for await (const chunk of result.stream) {
         try {
           const json = JSON.parse(chunk);
-          console.log('Chunk:', json);
           if (json.type === 'trace' && typeof json.trace === 'string') {
             setTraces((prev) => [...prev, json.trace as string]);
           } else if (json.type === 'output') {
             const streamedIdeas = (json.output?.ideas ?? []) as Idea[];
             const scored = streamedIdeas.map((i) => ({ ...i, score: calculateIdeaScore(i) })) as ScoredIdea[];
             scored.sort((a, b) => b.score - a.score);
-            console.log('Scored:', scored);
             setIdeas(scored);
             setStoredIdeas(scored);
           }
@@ -145,7 +161,6 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
         setError(finalOutput.error);
       }
     } catch (err) {
-      console.error('Error:', err);
       const message = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(message);
     } finally {
@@ -187,6 +202,12 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
         <Alert variant="info" className="mb-3" dismissible onClose={() => setShowHelp(false)}>
           Enter a broad niche to explore opportunities. Choose your strategy (in the next step) to niche down into more
           specific subniches or move sideways into adjacent subniches. Then click GO to generate ideas.
+        </Alert>
+      )}
+      {!!message && (
+        <Alert variant="secondary" className="mb-3">
+          <span className="fw-bold small">Niche Hunter says:</span>
+          <p className="mb-0">“{message}”</p>
         </Alert>
       )}
       <InputGroup className="mb-2">
@@ -234,12 +255,6 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
           {error}
         </Alert>
       )}
-      {!!message && (
-        <Alert variant="secondary" className="mb-3">
-          <span className="fw-bold small">Niche Hunter says:</span>
-          <p className="mb-0">“{message}”</p>
-        </Alert>
-      )}
       {!!ideas.length && (
         <div className="mt-3">
           <Table striped bordered hover responsive>
@@ -256,14 +271,23 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
                 <th>Evergreen</th>
                 <th>Purchase Power</th>
                 <th>Engagement</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {ideas.map((idea, idx) => (
                 <tr key={`${idea.nm ?? 'idea'}-${idx}`}>
                   <td>{Number.isFinite(idea.score) ? Math.round(idea.score) : '-'}</td>
-                  <td>{idea.nm ?? '-'}</td>
-                  <td>{Number.isFinite(Number(idea.rp)) ? idea.rp : '-'}</td>
+                  <td>
+                    <OverlayTrigger
+                      placement="top"
+                      delay={{ show: 0, hide: 0 }}
+                      overlay={<Tooltip id={`kw-tip-${idx}`}>{idea.kw || 'No keyword'}</Tooltip>}
+                    >
+                      <span>{idea.nm ?? '-'}</span>
+                    </OverlayTrigger>
+                  </td>
+                  <td>{Number.isFinite(Number(idea.rp)) ? `$${(idea.rp as number).toFixed(2)}` : '-'}</td>
                   <td>{getRatingBadge(Number.isFinite(Number(idea.af)) ? Number(idea.af) : undefined)}</td>
                   <td>{getRatingBadge(Number.isFinite(Number(idea.sp)) ? Number(idea.sp) : undefined)}</td>
                   <td>{Number.isFinite(Number(idea.mk)) ? idea.mk : '-'}</td>
@@ -272,6 +296,41 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
                   <td>{getRatingBadge(Number.isFinite(Number(idea.eg)) ? Number(idea.eg) : undefined)}</td>
                   <td>{getRatingBadge(Number.isFinite(Number(idea.pp)) ? Number(idea.pp) : undefined)}</td>
                   <td>{getRatingBadge(Number.isFinite(Number(idea.en)) ? Number(idea.en) : undefined)}</td>
+                  <td className="text-nowrap">
+                    <OverlayTrigger
+                      placement="top"
+                      delay={{ show: 0, hide: 0 }}
+                      overlay={<Tooltip id={`kw-btn-${idx}`}>Send to Keyword Research</Tooltip>}
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline-primary"
+                        className="me-2"
+                        onClick={() => {
+                          setKeyword(idea.kw || idea.nm || '');
+                          setTab('Keyword Research');
+                        }}
+                      >
+                        🔎
+                      </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger
+                      placement="top"
+                      delay={{ show: 0, hide: 0 }}
+                      overlay={<Tooltip id={`cr-btn-${idx}`}>Send to Content Research</Tooltip>}
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline-success"
+                        onClick={() => {
+                          setIdea(idea.kw || idea.nm || '');
+                          setTab('Content Research');
+                        }}
+                      >
+                        📝
+                      </Button>
+                    </OverlayTrigger>
+                  </td>
                 </tr>
               ))}
             </tbody>

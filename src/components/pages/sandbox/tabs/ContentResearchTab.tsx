@@ -2,6 +2,7 @@ import React, { JSX } from 'react';
 import { Alert, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { runFlow } from 'genkit/beta/client';
 import { useLocalStorage } from 'react-storage-complete';
+import { useContentResearchState } from '../../../hooks/useContentResearchState';
 import { useUserAccountContext } from '../../../contexts/UserAccountProvider';
 import { useUserSettingsContext } from '../../../contexts/UserSettingsProvider';
 import { Markdown } from '../../../markdown/Markdown';
@@ -15,7 +16,7 @@ interface ResearchResult {
 }
 
 export const ContentResearchTab = (_props: ContentResearchTabProps): JSX.Element => {
-  const [idea, setIdea] = useLocalStorage<string>('sandbox.contentResearch.idea', '');
+  const { idea, setIdea } = useContentResearchState();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [savedResult, setSavedResult] = useLocalStorage<ResearchResult>(

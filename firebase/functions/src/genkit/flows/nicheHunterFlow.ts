@@ -82,7 +82,7 @@ export const nicheHunterFlow = gemini.defineFlow(
     trace(`Gemini model: ${model}`);
 
     // 3) Build prompt and schema
-    const prompt = `You are a niche ideation assistant for YouTube search-based video topics. Your goal is to generate niche ideas for a given niche. You are able to estimate quantitative viability of each niche idea based on your expert knowledge, such as revenue potential, affiliate strength, sponsorship strength, market size, search volume, saturation, evergreen score, purchase power, and engagement. Some scores are on a scale of 0 to 2, where 0 is low, 1 is medium, and 2 is high. Volume estimates are in thousands of people (K).
+    const prompt = `You are a niche ideation assistant for YouTube search-based video topics. Your goal is to generate niche ideas for a given niche. You are able to estimate quantitative viability of each niche idea based on your expert knowledge, such as revenue potential, affiliate strength, sponsorship strength, market size, search volume, saturation, evergreen score, purchase power, and engagement. Some scores are on a scale of 0 to 2, where 0 is low, 1 is medium, and 2 is high. Volume estimates are in thousands of people (K). Be as realistic as possible with your estimates, do not inflate them.
 
 Generate ${limit} ${input.strategy === 'nicheDown' ? 'subniches (niche down)' : 'adjacent/similar niches (niche sideways)'} for the following niche/topic: "${input.niche}"`;
 
@@ -139,8 +139,12 @@ Generate ${limit} ${input.strategy === 'nicheDown' ? 'subniches (niche down)' : 
                 maximum: 2,
                 description: 'Estimated engagement score (how engaging the niche is): 0=low,1=medium,2=high',
               },
+              kw: {
+                type: 'string',
+                description: 'Main keyword for the niche, all lowercase.',
+              },
             },
-            required: ['nm', 'rp', 'af', 'sp', 'mk', 'mv', 'st', 'eg', 'pp', 'en'],
+            required: ['nm', 'rp', 'af', 'sp', 'mk', 'mv', 'st', 'eg', 'pp', 'en', 'kw'],
           },
         },
         message: {

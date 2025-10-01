@@ -1,11 +1,12 @@
 import React, { JSX } from 'react';
 import { useLocalStorage } from 'react-storage-complete';
+import { useKeywordSearchState } from '../../../hooks/useKeywordSearchState';
 import { Alert, Button, Form, InputGroup, Spinner, Table } from 'react-bootstrap';
 
 export type KeywordResearchTabProps = Record<string, never>;
 
 export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element => {
-  const [keyword, setKeyword] = useLocalStorage<string>('sandbox.keywordResearch.keyword', '');
+  const { keyword, setKeyword } = useKeywordSearchState();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
