@@ -10,5 +10,6 @@ export { authenticateUserFlow } from './flows/authenticateUserFlow';
 export { getGeminiConfigFlow } from './flows/getGeminiConfigFlow';
 export { promptFlow as promptFlow } from './flows/promptFlow';
 export { nicheHunterFlow } from './flows/nicheHunterFlow';
+export { researchFlow } from './flows/researchFlow';
 
 // Tools
