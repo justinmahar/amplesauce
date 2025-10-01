@@ -1,5 +1,7 @@
 import React from 'react';
-import { Accordion, Button, Card, Col, Form, Row, Image, Spinner } from 'react-bootstrap';
+import { Accordion, Button, Card, Col, Form, Row, Image, Spinner, InputGroup } from 'react-bootstrap';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { useLocalStorage } from 'react-storage-complete';
 
 export type StockMediaAccordionItemProps = { eventKey: string };
 
@@ -10,7 +12,8 @@ export const StockMediaAccordionItem = ({ eventKey }: StockMediaAccordionItemPro
   const [orientation, setOrientation] = React.useState<'Any' | 'Landscape' | 'Portrait' | 'Square'>('Any');
   const [colorTheme, setColorTheme] = React.useState('');
   const [perPage, setPerPage] = React.useState<number>(20);
-  const [pexelsKey, setPexelsKey] = React.useState('');
+  const [pexelsKeyRaw, setPexelsKey, pexelsKeyInitialized] = useLocalStorage<string>('sandbox.pexels.apiKey', '', {});
+  const pexelsKey = pexelsKeyRaw ?? '';
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   type PexelsPhoto = { id: number; alt?: string; src?: { small?: string; medium?: string; original?: string } };
@@ -24,6 +27,7 @@ export const StockMediaAccordionItem = ({ eventKey }: StockMediaAccordionItemPro
   const [photoResults, setPhotoResults] = React.useState<PexelsPhoto[]>([]);
   const [videoResults, setVideoResults] = React.useState<PexelsVideo[]>([]);
   const [playingVideoId, setPlayingVideoId] = React.useState<number | null>(null);
+  const [showPexelsKey, setShowPexelsKey] = React.useState<boolean>(false);
 
   const getBestVideoUrl = (v: PexelsVideo): string => {
     const files = Array.isArray(v?.video_files) ? v.video_files : [];
@@ -176,11 +180,21 @@ export const StockMediaAccordionItem = ({ eventKey }: StockMediaAccordionItemPro
                 <Col md={6}>
                   <Form.Group controlId="pexelsApiKey">
                     <Form.Label>Pexels API Key</Form.Label>
-                    <Form.Control
-                      placeholder="Enter your Pexels API key"
-                      value={pexelsKey}
-                      onChange={(e) => setPexelsKey(e.target.value)}
-                    />
+                    <InputGroup>
+                      <Form.Control
+                        type={showPexelsKey ? 'text' : 'password'}
+                        placeholder="Enter your Pexels API key"
+                        value={pexelsKey}
+                        onChange={(e) => setPexelsKey(e.target.value)}
+                      />
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => setShowPexelsKey((s) => !s)}
+                        aria-label={showPexelsKey ? 'Hide API key' : 'Show API key'}
+                      >
+                        {showPexelsKey ? <FiEyeOff /> : <FiEye />}
+                      </Button>
+                    </InputGroup>
                   </Form.Group>
                 </Col>
               </Row>

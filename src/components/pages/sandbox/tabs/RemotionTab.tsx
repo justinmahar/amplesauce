@@ -267,6 +267,13 @@ export const RemotionTab = (_props: RemotionTabProps): JSX.Element => {
   return (
     <div>
       <h2 className="mb-3">Remotion</h2>
+      <div className="text-muted mb-2">
+        Learn more in the{' '}
+        <a href="https://www.remotion.dev/docs" target="_blank" rel="noreferrer">
+          Remotion docs
+        </a>
+        .
+      </div>
       <div className="mb-3 d-flex gap-3 flex-wrap align-items-end">
         <Form.Group controlId="titleFontSelect">
           <Form.Label className="mb-1">Title Font</Form.Label>
