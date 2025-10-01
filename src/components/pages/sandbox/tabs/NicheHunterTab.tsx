@@ -8,7 +8,7 @@ import { useLocalStorage } from 'react-storage-complete';
 export type NicheHunterTabProps = Record<string, never>;
 
 export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
-  const [niche, setNiche] = React.useState('');
+  const [niche, setNiche] = useLocalStorage<string>('sandbox.nicheHunter.niche', '');
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [limitValue, setLimitValue] = React.useState<string>('50');
@@ -66,7 +66,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
   };
 
   const handleGo = async () => {
-    const requestedNiche = niche.trim() || DEFAULT_NICHE_PROMPT;
+    const requestedNiche = (niche ?? '').trim() || DEFAULT_NICHE_PROMPT;
     if (!user) {
       setError('Please log in to use Niche Hunter.');
       return;
@@ -154,7 +154,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
       <InputGroup className="mb-2">
         <Form.Control
           placeholder="Enter a niche (e.g., Fitness, Home Automation, Woodworking)"
-          value={niche}
+          value={niche ?? ''}
           onChange={(e) => setNiche(e.target.value)}
           disabled={isLoading}
         />

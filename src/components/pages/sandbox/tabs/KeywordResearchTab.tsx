@@ -5,7 +5,7 @@ import { Alert, Button, Form, InputGroup, Spinner, Table } from 'react-bootstrap
 export type KeywordResearchTabProps = Record<string, never>;
 
 export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element => {
-  const [keyword, setKeyword] = React.useState('');
+  const [keyword, setKeyword] = useLocalStorage<string>('sandbox.keywordResearch.keyword', '');
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
@@ -89,7 +89,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
 
   const fetchSuggestionsAsync = React.useCallback(
     async (q: string, showEmptyError: boolean): Promise<void> => {
-      const query = q.trim();
+      const query = (q ?? '').trim();
       if (!query) {
         if (showEmptyError) {
           setError('Please enter a keyword.');
@@ -131,12 +131,12 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
   );
 
   const handleGo = async (): Promise<void> => {
-    await fetchSuggestionsAsync(keyword, true);
+    await fetchSuggestionsAsync(keyword ?? '', true);
   };
 
   React.useEffect(() => {
     const handle = setTimeout(() => {
-      void fetchSuggestionsAsync(keyword, false);
+      void fetchSuggestionsAsync(keyword ?? '', false);
     }, 100);
     return () => clearTimeout(handle);
   }, [keyword, fetchSuggestionsAsync]);
@@ -154,7 +154,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
         <Form.Control
           ref={inputRef}
           placeholder="Enter a keyword (e.g., coffee grinder, gaming pc)"
-          value={keyword}
+          value={keyword ?? ''}
           onChange={(e) => setKeyword(e.target.value)}
           // disabled={isLoading}
         />
