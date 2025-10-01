@@ -82,8 +82,9 @@ export const nicheHunterFlow = gemini.defineFlow(
     trace(`Gemini model: ${model}`);
 
     // 3) Build prompt and schema
-    const prompt = `You are a niche ideation assistant for YouTube search-based video topics. Your goal is to generate niche ideas for a given niche.
-Generate no more than ${limit} ${input.strategy === 'nicheDown' ? 'subniches (niche down)' : 'adjacent/similar niches (niche sideways)'} for the following niche: "${input.niche}"`;
+    const prompt = `You are a niche ideation assistant for YouTube search-based video topics. Your goal is to generate niche ideas for a given niche. You are able to estimate quantitative viability of each niche idea based on your expert knowledge, such as revenue potential, affiliate strength, sponsorship strength, market size, search volume, saturation, evergreen score, purchase power, and engagement. Some scores are on a scale of 0 to 2, where 0 is low, 1 is medium, and 2 is high. Volume estimates are in thousands of people (K).
+
+Generate ${limit} ${input.strategy === 'nicheDown' ? 'subniches (niche down)' : 'adjacent/similar niches (niche sideways)'} for the following niche/topic: "${input.niche}"`;
 
     const jsonSchema = {
       type: 'object',
@@ -96,36 +97,58 @@ Generate no more than ${limit} ${input.strategy === 'nicheDown' ? 'subniches (ni
             type: 'object',
             properties: {
               nm: { type: 'string', description: 'Name of the niche' },
-              rp: { type: 'number', description: 'Estimated revenue per mille (RPM) for monetized views' },
-              af: { type: 'integer', minimum: 0, maximum: 2, description: 'Affiliate strength: 0=low,1=medium,2=high' },
+              rp: { type: 'number', description: 'Estimated revenue per mille (RPM) for monetized views (USD)' },
+              af: {
+                type: 'integer',
+                minimum: 0,
+                maximum: 2,
+                description:
+                  'Estimated affiliate strength (how likely the niche is to have an affiliate program): 0=low,1=medium,2=high',
+              },
               sp: {
                 type: 'integer',
                 minimum: 0,
                 maximum: 2,
-                description: 'Sponsorship strength: 0=low,1=medium,2=high',
+                description:
+                  'Estimated sponsorship strength (how likely the niche is to be sponsored): 0=low,1=medium,2=high',
               },
-              mk: { type: 'number', description: 'Estimated market size in thousands of people (K)' },
-              mv: { type: 'number', description: 'Estimated monthly YouTube search volume' },
+              mk: { type: 'number', description: 'Estimated market size (K)' },
+              mv: { type: 'number', description: 'Estimated monthly YouTube search volume (K)' },
               st: {
                 type: 'integer',
                 minimum: 0,
                 maximum: 2,
-                description: 'Saturation estimate: 0=low,1=medium,2=high (higher = more saturated)',
+                description:
+                  'Estimated saturation estimate (how saturated the niche is): 0=low,1=medium,2=high (higher = more saturated)',
               },
-              eg: { type: 'integer', minimum: 0, maximum: 2, description: 'Evergreen score: 0=low,1=medium,2=high' },
+              eg: {
+                type: 'integer',
+                minimum: 0,
+                maximum: 2,
+                description: 'Estimated evergreen score (how evergreen the niche is): 0=low,1=medium,2=high',
+              },
               pp: {
                 type: 'integer',
                 minimum: 0,
                 maximum: 2,
-                description: 'Purchase power score: 0=low,1=medium,2=high',
+                description: 'Estimated purchase power score (how much money the niche has): 0=low,1=medium,2=high',
               },
-              en: { type: 'integer', minimum: 0, maximum: 2, description: 'Engagement score: 0=low,1=medium,2=high' },
+              en: {
+                type: 'integer',
+                minimum: 0,
+                maximum: 2,
+                description: 'Estimated engagement score (how engaging the niche is): 0=low,1=medium,2=high',
+              },
             },
             required: ['nm', 'rp', 'af', 'sp', 'mk', 'mv', 'st', 'eg', 'pp', 'en'],
           },
         },
+        message: {
+          type: 'string',
+          description: 'Your commentary about the niche ideas.',
+        },
       },
-      required: ['ideas'],
+      required: ['message'],
     };
 
     // 4) Call Gemini
