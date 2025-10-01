@@ -19,6 +19,7 @@
     "@types/seedrandom": "^3.0.8",
     "bootstrap": "^5.3.7",
     "bootswatch": "^5.3.7",
+    "bottleneck": "^2.19.5",
     "chart.js": "^4.5.0",
     "classnames": "^2.5.1",
     "copy-to-clipboard": "^3.3.3",

@@ -1,7 +1,8 @@
 import React, { JSX } from 'react';
 import { useLocalStorage } from 'react-storage-complete';
 import { useKeywordSearchState } from '../../../hooks/useKeywordSearchState';
-import { Alert, Button, Form, InputGroup, Spinner, Table } from 'react-bootstrap';
+import { Alert, Button, ButtonGroup, Form, InputGroup, ListGroup, ProgressBar, Spinner, Table } from 'react-bootstrap';
+import Bottleneck from 'bottleneck';
 
 export type KeywordResearchTabProps = Record<string, never>;
 
@@ -16,6 +17,19 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     'sandbox.keywordResearch.suggestions',
     [],
   );
+  const [combos, setCombos] = useLocalStorage<string[]>('sandbox.keywordResearch.combos', [
+    'KEYWORD *',
+    '* KEYWORD',
+    'best KEYWORD *',
+    'KEYWORD best *',
+  ]);
+  const [newCombo, setNewCombo] = React.useState('KEYWORD *');
+  const [isScanning, setIsScanning] = React.useState(false);
+  const [progressCount, setProgressCount] = React.useState(0);
+  const [progressTotal, setProgressTotal] = React.useState(0);
+  const [scanErrors, setScanErrors] = React.useState(0);
+  const cancelRef = React.useRef(false);
+  const scanIdRef = React.useRef(0);
 
   const YT_AUTOCOMPLETE_ENDPOINT = 'https://clients1.google.com/complete/search';
 
@@ -88,6 +102,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     return [];
   };
 
+  // Keeping the single-fetch function for future use; suppress unused warnings by referencing in noop
   const fetchSuggestionsAsync = React.useCallback(
     async (q: string, showEmptyError: boolean): Promise<void> => {
       const query = (q ?? '').trim();
@@ -130,17 +145,130 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     },
     [setStoredSuggestions],
   );
+  // Reference to avoid unused-var lint during deep-scan-only mode
+  void fetchSuggestionsAsync;
 
-  const handleGo = async (): Promise<void> => {
-    await fetchSuggestionsAsync(keyword ?? '', true);
+  // Deprecated: direct GO fetch; deep scan is primary action now
+
+  const isValidCombo = (c: string): boolean => {
+    const s = (c ?? '').trim();
+    return s.includes('KEYWORD') && s.includes('*');
   };
 
-  React.useEffect(() => {
-    const handle = setTimeout(() => {
-      void fetchSuggestionsAsync(keyword ?? '', false);
-    }, 100);
-    return () => clearTimeout(handle);
-  }, [keyword, fetchSuggestionsAsync]);
+  const handleAddCombo = (): void => {
+    const c = (newCombo ?? '').trim();
+    if (!isValidCombo(c)) {
+      setError('Combo must include KEYWORD and *');
+      return;
+    }
+    setError(null);
+    const next = Array.from(new Set([...(combos ?? []), c]));
+    setCombos(next);
+    setNewCombo('KEYWORD *');
+  };
+
+  const handleDeleteCombo = (idx: number): void => {
+    const next = (combos ?? []).filter((_, i) => i !== idx);
+    setCombos(next);
+  };
+
+  const deepScanAsync = async (): Promise<void> => {
+    const baseKeyword = (keyword ?? '').trim();
+    if (!baseKeyword) {
+      setError('Please enter a keyword.');
+      return;
+    }
+    const validCombos = (combos ?? []).filter(isValidCombo);
+    if (validCombos.length === 0) {
+      setError('Please add at least one valid combo.');
+      return;
+    }
+
+    setIsScanning(true);
+    setIsLoading(true);
+    setError(null);
+    cancelRef.current = false;
+    const myScanId = ++scanIdRef.current;
+    setProgressCount(0);
+    setProgressTotal(0);
+    setScanErrors(0);
+    // Reset suggestions for a fresh deep scan
+    setSuggestions([]);
+    setStoredSuggestions([]);
+
+    // Expand combos → scan keywords
+    const alphabet = Array.from({ length: 26 }, (_, i) => String.fromCharCode('a'.charCodeAt(0) + i));
+    const scanKeywords: { q: string; letter: string }[] = [];
+    for (const combo of validCombos) {
+      for (const ch of alphabet) {
+        const s1 = (combo || '').split('KEYWORD').join(baseKeyword);
+        scanKeywords.push({ q: s1.split('*').join(ch), letter: ch });
+      }
+    }
+    setProgressTotal(scanKeywords.length);
+
+    const unique = new Set<string>();
+
+    const limiter = new Bottleneck({ maxConcurrent: 2, minTime: 300 });
+
+    const runOne = async ({ q, letter }: { q: string; letter: string }): Promise<void> => {
+      // Jitter
+      const jitter = 100 + Math.floor(Math.random() * 200);
+      await new Promise((r) => setTimeout(r, jitter));
+      if (cancelRef.current || scanIdRef.current !== myScanId) {
+        return;
+      }
+      const lang = (navigator?.language || 'en').split('-')[0] || 'en';
+      const baseUrl = `${YT_AUTOCOMPLETE_ENDPOINT}?client=youtube&ds=yt&hl=${encodeURIComponent(lang)}&q=${encodeURIComponent(q)}`;
+      let attempts = 0;
+      const maxAttempts = 3;
+      while (attempts < maxAttempts && !cancelRef.current) {
+        try {
+          const data = await loadJsonpAsync(baseUrl, 'callback');
+          const list = parseSuggestions(data).filter((s) => {
+            const sLower = String(s).toLowerCase();
+            const qLower = q.toLowerCase();
+            if (sLower.includes(qLower)) {
+              // Allow if wildcard letter was 'a' or 'i'; otherwise skip
+              return letter === 'a' || letter === 'i';
+            }
+            return true;
+          });
+          for (const s of list) {
+            unique.add(String(s));
+          }
+          break;
+        } catch (_e) {
+          attempts += 1;
+          setScanErrors((prev) => prev + 1);
+          const backoff = 400 * attempts + Math.floor(Math.random() * 300);
+          await new Promise((r) => setTimeout(r, backoff));
+        }
+      }
+      if (scanIdRef.current === myScanId) {
+        setProgressCount((prev) => prev + 1);
+        const next = Array.from(unique);
+        setSuggestions(next);
+        setStoredSuggestions(next);
+      }
+    };
+
+    try {
+      await Promise.all(scanKeywords.map((item) => limiter.schedule(() => runOne(item))));
+    } finally {
+      setIsScanning(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelScan = (): void => {
+    cancelRef.current = true;
+    scanIdRef.current += 1; // invalidate in-flight updates
+    setIsScanning(false);
+    setIsLoading(false);
+  };
+
+  // One-off auto fetch disabled; deep scan only.
 
   React.useEffect(() => {
     if (suggestionsInitialized && Array.isArray(storedSuggestions) && storedSuggestions.length > 0) {
@@ -159,17 +287,56 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
           onChange={(e) => setKeyword(e.target.value)}
           // disabled={isLoading}
         />
-        <Button variant="primary" onClick={handleGo} disabled={isLoading}>
-          {isLoading ? (
+        <Button
+          variant="primary"
+          onClick={deepScanAsync}
+          disabled={
+            isLoading || isScanning || !(keyword ?? '').trim() || (combos ?? []).filter(isValidCombo).length === 0
+          }
+        >
+          {isLoading || isScanning ? (
             <span className="d-flex align-items-center gap-2">
               <Spinner animation="border" size="sm" role="status" />
-              <span>Fetching...</span>
+              <span>Deep Scanning...</span>
             </span>
           ) : (
-            'GO'
+            'Deep Scan'
           )}
         </Button>
+        <Button
+          variant="outline-secondary"
+          className="ms-2"
+          onClick={() => {
+            setSuggestions([]);
+            setStoredSuggestions([]);
+            setProgressCount(0);
+            setProgressTotal(0);
+            setScanErrors(0);
+          }}
+          disabled={!suggestions.length && progressCount === 0}
+        >
+          Clear
+        </Button>
       </InputGroup>
+      {(isScanning || progressCount > 0) && (
+        <div className="mb-2">
+          <ProgressBar
+            now={progressTotal ? Math.round((progressCount / progressTotal) * 100) : 0}
+            label={`${progressCount}/${progressTotal}`}
+            animated={isScanning}
+            striped={isScanning}
+          />
+          <div className="small text-muted mt-1 d-flex justify-content-between">
+            <span>
+              Completed: {progressCount} / {progressTotal}
+            </span>
+            <span>Errors: {scanErrors}</span>
+            <Button size="sm" variant="outline-secondary" onClick={handleCancelScan} disabled={!isScanning}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
       {!!error && (
         <Alert variant="danger" className="mt-2">
           {error}
@@ -195,6 +362,33 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
           </Table>
         </div>
       )}
+
+      {/* Combo Manager */}
+      <div className="mt-4">
+        <h5 className="mb-2">Combo Manager</h5>
+        <div className="text-muted small mb-2">
+          Use KEYWORD and * in your combo. * expands to a–z. Example: "best KEYWORD *"
+        </div>
+        <InputGroup className="mb-2" style={{ maxWidth: 520 }}>
+          <Form.Control placeholder="e.g., KEYWORD *" value={newCombo} onChange={(e) => setNewCombo(e.target.value)} />
+          <Button variant="outline-primary" onClick={handleAddCombo} disabled={!isValidCombo(newCombo)}>
+            Add
+          </Button>
+        </InputGroup>
+        <ListGroup style={{ maxWidth: 520 }}>
+          {(combos ?? []).map((c, idx) => (
+            <ListGroup.Item key={`combo-${idx}`} className="d-flex justify-content-between align-items-center">
+              <span className="text-monospace">{c}</span>
+              <ButtonGroup>
+                <Button size="sm" variant="outline-danger" onClick={() => handleDeleteCombo(idx)}>
+                  Delete
+                </Button>
+              </ButtonGroup>
+            </ListGroup.Item>
+          ))}
+          {!(combos ?? []).length && <ListGroup.Item className="text-muted">No combos yet.</ListGroup.Item>}
+        </ListGroup>
+      </div>
     </div>
   );
 };

@@ -26,7 +26,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
   const [niche, setNiche] = useLocalStorage<string>('sandbox.nicheHunter.niche', '');
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [limitValue, setLimitValue] = React.useState<string>('50');
+  const [limitValue, setLimitValue] = React.useState<string>('20');
   const [traces, setTraces] = React.useState<string[]>([]);
   const [message, setMessage] = React.useState<string | null>(null);
   const [showHelp, setShowHelp] = React.useState<boolean>(true);
