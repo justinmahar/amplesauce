@@ -30,6 +30,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
   const [scanErrors, setScanErrors] = React.useState(0);
   const cancelRef = React.useRef(false);
   const scanIdRef = React.useRef(0);
+  const [lastError, setLastError] = React.useState<string | null>(null);
 
   const YT_AUTOCOMPLETE_ENDPOINT = 'https://clients1.google.com/complete/search';
 
@@ -71,13 +72,13 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
       script.async = true;
       script.onerror = () => {
         cleanup();
-        reject(new Error('JSONP request failed'));
+        reject(new Error(`Request failed. Likely caused by too many requests.`));
       };
       document.head.appendChild(script);
 
       timeoutHandle = setTimeout(() => {
         cleanup();
-        reject(new Error('JSONP request timed out'));
+        reject(new Error(`JSONP request timed out after ${timeoutMillis}ms for ${jsonpUrl}`));
       }, timeoutMillis);
     });
   };
@@ -101,54 +102,6 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     }
     return [];
   };
-
-  // Keeping the single-fetch function for future use; suppress unused warnings by referencing in noop
-  const fetchSuggestionsAsync = React.useCallback(
-    async (q: string, showEmptyError: boolean): Promise<void> => {
-      const query = (q ?? '').trim();
-      if (!query) {
-        if (showEmptyError) {
-          setError('Please enter a keyword.');
-          setSuggestions([]);
-        }
-        return;
-      }
-
-      const requestId = ++latestRequestIdRef.current;
-      setIsLoading(true);
-      setError(null);
-      try {
-        const lang = (navigator?.language || 'en').split('-')[0] || 'en';
-        const baseUrl = `${YT_AUTOCOMPLETE_ENDPOINT}?client=youtube&ds=yt&hl=${encodeURIComponent(lang)}&q=${encodeURIComponent(query)}`;
-        const data = await loadJsonpAsync(baseUrl, 'callback');
-        if (requestId !== latestRequestIdRef.current) {
-          return; // stale response
-        }
-        const suggestionsList = parseSuggestions(data);
-        setSuggestions(suggestionsList);
-        setStoredSuggestions(suggestionsList);
-        inputRef.current?.focus();
-      } catch (err) {
-        if (requestId !== latestRequestIdRef.current) {
-          return; // stale response
-        }
-        const message = err instanceof Error ? err.message : 'An unknown error occurred.';
-        setError(message);
-        setSuggestions([]);
-        setStoredSuggestions([]);
-        inputRef.current?.focus();
-      } finally {
-        if (requestId === latestRequestIdRef.current) {
-          setIsLoading(false);
-        }
-      }
-    },
-    [setStoredSuggestions],
-  );
-  // Reference to avoid unused-var lint during deep-scan-only mode
-  void fetchSuggestionsAsync;
-
-  // Deprecated: direct GO fetch; deep scan is primary action now
 
   const isValidCombo = (c: string): boolean => {
     const s = (c ?? '').trim();
@@ -192,6 +145,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     setProgressCount(0);
     setProgressTotal(0);
     setScanErrors(0);
+    setLastError(null);
     // Reset suggestions for a fresh deep scan
     setSuggestions([]);
     setStoredSuggestions([]);
@@ -212,9 +166,6 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     const limiter = new Bottleneck({ maxConcurrent: 2, minTime: 300 });
 
     const runOne = async ({ q, letter }: { q: string; letter: string }): Promise<void> => {
-      // Jitter
-      const jitter = 100 + Math.floor(Math.random() * 200);
-      await new Promise((r) => setTimeout(r, jitter));
       if (cancelRef.current || scanIdRef.current !== myScanId) {
         return;
       }
@@ -224,6 +175,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
       const maxAttempts = 3;
       while (attempts < maxAttempts && !cancelRef.current) {
         try {
+          console.log('Running one', q);
           const data = await loadJsonpAsync(baseUrl, 'callback');
           const list = parseSuggestions(data).filter((s) => {
             const sLower = String(s).toLowerCase();
@@ -241,8 +193,20 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
         } catch (_e) {
           attempts += 1;
           setScanErrors((prev) => prev + 1);
-          const backoff = 400 * attempts + Math.floor(Math.random() * 300);
-          await new Promise((r) => setTimeout(r, backoff));
+          try {
+            const msg = _e instanceof Error ? _e.message : String(_e);
+            setLastError(msg);
+          } catch {
+            // ignore
+          }
+        } finally {
+          const baseDelay = 300; // ms
+          const jitter = Math.floor(Math.random() * 200); // ms
+          const maxBackoff = 5000; // ms cap
+          const exp = Math.min(maxBackoff, baseDelay * Math.pow(2, Math.max(0, attempts - 1)));
+          const finalDelay = exp + jitter;
+          console.log('Delay', finalDelay, 'ms');
+          await new Promise((r) => setTimeout(r, finalDelay));
         }
       }
       if (scanIdRef.current === myScanId) {
@@ -266,6 +230,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
     scanIdRef.current += 1; // invalidate in-flight updates
     setIsScanning(false);
     setIsLoading(false);
+    setLastError(null);
   };
 
   // One-off auto fetch disabled; deep scan only.
@@ -322,19 +287,25 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
         <div className="mb-2">
           <ProgressBar
             now={progressTotal ? Math.round((progressCount / progressTotal) * 100) : 0}
-            label={`${progressCount}/${progressTotal}`}
+            label={`${progressTotal ? Math.round((progressCount / progressTotal) * 100) : 0}%`}
             animated={isScanning}
             striped={isScanning}
           />
           <div className="small text-muted mt-1 d-flex justify-content-between">
             <span>
               Completed: {progressCount} / {progressTotal}
+              {progressTotal ? ` (${Math.round((progressCount / progressTotal) * 100)}%)` : ''}
             </span>
             <span>Errors: {scanErrors}</span>
             <Button size="sm" variant="outline-secondary" onClick={handleCancelScan} disabled={!isScanning}>
               Cancel
             </Button>
           </div>
+          {scanErrors > 0 && (
+            <Alert variant="warning" className="mt-2 mb-0">
+              {scanErrors} request(s) failed.{lastError ? ` Last error: ${lastError}` : ''}
+            </Alert>
+          )}
         </div>
       )}
       {!!error && (
