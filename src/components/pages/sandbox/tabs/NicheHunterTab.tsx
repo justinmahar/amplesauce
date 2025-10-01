@@ -1,9 +1,10 @@
 import React, { JSX } from 'react';
-import { Alert, Button, Form, InputGroup, Spinner, Table } from 'react-bootstrap';
+import { Alert, Button, Form, InputGroup, Spinner, Table, Badge, Accordion } from 'react-bootstrap';
 import { streamFlow } from 'genkit/beta/client';
 import { useUserAccountContext } from '../../../contexts/UserAccountProvider';
 import { useUserSettingsContext } from '../../../contexts/UserSettingsProvider';
 import { useLocalStorage } from 'react-storage-complete';
+import { FaQuestionCircle, FaCheckCircle } from 'react-icons/fa';
 
 export type NicheHunterTabProps = Record<string, never>;
 
@@ -13,6 +14,8 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
   const [error, setError] = React.useState<string | null>(null);
   const [limitValue, setLimitValue] = React.useState<string>('50');
   const [traces, setTraces] = React.useState<string[]>([]);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const [showHelp, setShowHelp] = React.useState<boolean>(true);
   type Idea = {
     nm?: string;
     rp?: number;
@@ -113,6 +116,16 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
             setIdeas(scored);
             setStoredIdeas(scored);
           }
+          // Streamed message can be present either at top-level or inside output
+          const streamedMessage: unknown =
+            typeof json?.message === 'string'
+              ? json.message
+              : typeof json?.output?.message === 'string'
+                ? json.output.message
+                : undefined;
+          if (typeof streamedMessage === 'string' && streamedMessage.length > 0) {
+            setMessage(streamedMessage);
+          }
         } catch (_e) {
           // ignore parse errors for robustness
         }
@@ -125,6 +138,9 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
       scoredFinal.sort((a, b) => b.score - a.score);
       setIdeas(scoredFinal);
       setStoredIdeas(scoredFinal);
+      if (typeof (finalOutput as any)?.message === 'string') {
+        setMessage((finalOutput as any).message as string);
+      }
       if (finalOutput.error) {
         setError(finalOutput.error);
       }
@@ -137,6 +153,21 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
     }
   };
 
+  const getRatingBadge = (value: number | undefined, strategy?: 'inverse'): JSX.Element => {
+    const v = typeof value === 'number' ? value : -1;
+    const label = v === 0 ? 'Low' : v === 1 ? 'Medium' : v === 2 ? 'High' : '-';
+    const variantMap =
+      strategy === 'inverse'
+        ? ({ 0: 'success', 1: 'warning', 2: 'danger' } as const)
+        : ({ 0: 'danger', 1: 'warning', 2: 'success' } as const);
+    const variant = v === 0 || v === 1 || v === 2 ? variantMap[v] : 'secondary';
+    return (
+      <Badge bg={variant} className={variant === 'warning' ? 'text-black' : undefined}>
+        {label}
+      </Badge>
+    );
+  };
+
   // Load from localStorage when available
   React.useEffect(() => {
     if (ideasInitialized && ideas.length === 0 && Array.isArray(storedIdeas) && storedIdeas.length > 0) {
@@ -146,19 +177,32 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
 
   return (
     <div>
-      <h2 className="mb-3">Niche Hunter</h2>
-      <Alert variant="info" className="mb-3">
-        Enter a broad niche to explore opportunities. Choose your strategy (in the next step) to niche down into more
-        specific subniches or move sideways into adjacent subniches. Then click GO to generate ideas.
-      </Alert>
+      <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+        <h2 className="mb-0">Niche Hunter</h2>
+        {!showHelp && (
+          <FaQuestionCircle className="text-muted cursor-pointer" title="Show help" onClick={() => setShowHelp(true)} />
+        )}
+      </div>
+      {showHelp && (
+        <Alert variant="info" className="mb-3" dismissible onClose={() => setShowHelp(false)}>
+          Enter a broad niche to explore opportunities. Choose your strategy (in the next step) to niche down into more
+          specific subniches or move sideways into adjacent subniches. Then click GO to generate ideas.
+        </Alert>
+      )}
       <InputGroup className="mb-2">
         <Form.Control
           placeholder="Enter a niche (e.g., Fitness, Home Automation, Woodworking)"
           value={niche ?? ''}
           onChange={(e) => setNiche(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              void handleGo();
+            }
+          }}
           disabled={isLoading}
         />
-        <InputGroup.Text>Limit</InputGroup.Text>
+        <InputGroup.Text>Count</InputGroup.Text>
         <Form.Control
           type="number"
           min={1}
@@ -184,6 +228,12 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
           {error}
         </Alert>
       )}
+      {!!message && (
+        <Alert variant="secondary" className="mb-3">
+          <span className="fw-bold small">Niche Hunter says:</span>
+          <p className="mb-0">“{message}”</p>
+        </Alert>
+      )}
       {!!ideas.length && (
         <div className="mt-3">
           <Table striped bordered hover responsive>
@@ -195,7 +245,7 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
                 <th>Affiliate</th>
                 <th>Sponsor</th>
                 <th>Market (K)</th>
-                <th>Monthly Vol</th>
+                <th>Monthly Vol (K)</th>
                 <th>Saturation</th>
                 <th>Evergreen</th>
                 <th>Purchase Power</th>
@@ -205,17 +255,17 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
             <tbody>
               {ideas.map((idea, idx) => (
                 <tr key={`${idea.nm ?? 'idea'}-${idx}`}>
-                  <td>{Number.isFinite(idea.score) ? idea.score : '-'}</td>
+                  <td>{Number.isFinite(idea.score) ? Math.round(idea.score) : '-'}</td>
                   <td>{idea.nm ?? '-'}</td>
                   <td>{Number.isFinite(Number(idea.rp)) ? idea.rp : '-'}</td>
-                  <td>{Number.isFinite(Number(idea.af)) ? idea.af : '-'}</td>
-                  <td>{Number.isFinite(Number(idea.sp)) ? idea.sp : '-'}</td>
+                  <td>{getRatingBadge(Number.isFinite(Number(idea.af)) ? Number(idea.af) : undefined)}</td>
+                  <td>{getRatingBadge(Number.isFinite(Number(idea.sp)) ? Number(idea.sp) : undefined)}</td>
                   <td>{Number.isFinite(Number(idea.mk)) ? idea.mk : '-'}</td>
-                  <td>{Number.isFinite(Number(idea.mv)) ? idea.mv : '-'}</td>
-                  <td>{Number.isFinite(Number(idea.st)) ? idea.st : '-'}</td>
-                  <td>{Number.isFinite(Number(idea.eg)) ? idea.eg : '-'}</td>
-                  <td>{Number.isFinite(Number(idea.pp)) ? idea.pp : '-'}</td>
-                  <td>{Number.isFinite(Number(idea.en)) ? idea.en : '-'}</td>
+                  <td>{Number.isFinite(Number(idea.mv)) ? `${Math.round(Number(idea.mv))}K` : '-'}</td>
+                  <td>{getRatingBadge(Number.isFinite(Number(idea.st)) ? Number(idea.st) : undefined, 'inverse')}</td>
+                  <td>{getRatingBadge(Number.isFinite(Number(idea.eg)) ? Number(idea.eg) : undefined)}</td>
+                  <td>{getRatingBadge(Number.isFinite(Number(idea.pp)) ? Number(idea.pp) : undefined)}</td>
+                  <td>{getRatingBadge(Number.isFinite(Number(idea.en)) ? Number(idea.en) : undefined)}</td>
                 </tr>
               ))}
             </tbody>
@@ -224,13 +274,27 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
       )}
       {!!traces.length && (
         <div className="mt-3">
-          <Alert variant="secondary" className="mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            <ul className="ps-3">
-              {traces.map((trace, idx) => (
-                <li key={`trace-${idx}`}>{trace}</li>
-              ))}
-            </ul>
-          </Alert>
+          <Accordion>
+            <Accordion.Item eventKey="0">
+              <Accordion.Header>
+                <div className="d-flex align-items-center">
+                  {isLoading ? (
+                    <Spinner animation="border" size="sm" className="me-2" />
+                  ) : (
+                    <FaCheckCircle className="text-success me-2" />
+                  )}
+                  <span>Progress</span>
+                </div>
+              </Accordion.Header>
+              <Accordion.Body>
+                <ul className="ps-3 mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {traces.map((trace, idx) => (
+                    <li key={`trace-${idx}`}>{trace}</li>
+                  ))}
+                </ul>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
         </div>
       )}
     </div>
