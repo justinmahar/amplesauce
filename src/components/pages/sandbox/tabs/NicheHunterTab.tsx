@@ -209,6 +209,12 @@ export const NicheHunterTab = (_props: NicheHunterTabProps): JSX.Element => {
           max={50}
           value={limitValue}
           onChange={(e) => setLimitValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              void handleGo();
+            }
+          }}
           disabled={isLoading}
           style={{ maxWidth: 120 }}
         />
