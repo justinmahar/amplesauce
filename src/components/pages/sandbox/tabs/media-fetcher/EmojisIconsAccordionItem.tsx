@@ -2,6 +2,7 @@ import React from 'react';
 import { Accordion, Button, Card, Col, Form, Row, Image } from 'react-bootstrap';
 import { EmojiKitName, getEmojiImageUrl } from '../../../../utils/emoji';
 import { useThemeContext } from '../../../../contexts/ThemeProvider';
+import classNames from 'classnames';
 
 export type EmojisIconsAccordionItemProps = { eventKey: string };
 
@@ -111,7 +112,12 @@ export const EmojisIconsAccordionItem = ({ eventKey }: EmojisIconsAccordionItemP
                         setPreview(r.emoji);
                       }}
                     >
-                      <span style={{ fontSize: 18, lineHeight: 1 }}>{r.emoji}</span>
+                      <span
+                        className={classNames(themeContext.darkModeEnabled ? 'text-light' : 'text-dark')}
+                        style={{ fontSize: 18, lineHeight: 1 }}
+                      >
+                        {r.emoji}
+                      </span>
                     </Button>
                   ))}
                 </div>
