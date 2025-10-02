@@ -1,7 +1,11 @@
 import React from 'react';
 import { AbsoluteFill, Sequence, useVideoConfig, useCurrentFrame, interpolate } from 'remotion';
 
-export const AmpleSauceSequence = () => {
+export type AmpleSauceCompositionProps = {
+  title: string;
+};
+
+export const AmpleSauceComposition: React.FC<AmpleSauceCompositionProps> = ({ title }: AmpleSauceCompositionProps) => {
   const { durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
   const opacity = interpolate(frame, [0, 15, durationInFrames - 15, durationInFrames], [0, 1, 1, 0], {
@@ -22,7 +26,7 @@ export const AmpleSauceSequence = () => {
           background: 'linear-gradient(135deg, #2538de, #60bdf4)',
         }}
       >
-        <div style={{ color: '#fff', transform: `translateY(${y}px)`, opacity }}>Hello, Remotion!</div>
+        <div style={{ color: '#fff', transform: `translateY(${y}px)`, opacity }}>{title}</div>
       </AbsoluteFill>
     </Sequence>
   );

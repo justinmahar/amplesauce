@@ -4,6 +4,7 @@ import { Player } from '@remotion/player';
 import { AbsoluteFill, useCurrentFrame, interpolate, Easing, Sequence, Audio, Video } from 'remotion';
 import { EmojiKitName, getEmojiImageUrl } from '../../../utils/emoji';
 import { Gradients } from '../../../misc/Gradients';
+import { AmpleSauceSequence } from '../../../../remotion/AmpleSauceComposition';
 
 export type RemotionTabProps = Record<string, never>;
 
@@ -306,7 +307,7 @@ export const RemotionTab = (_props: RemotionTabProps): JSX.Element => {
         </Form.Group>
       </div>
       <Player
-        component={DemoComposition}
+        component={AmpleSauceSequence}
         inputProps={{ titleFont, subtitleFont, emojiChar }}
         durationInFrames={durationInFrames}
         compositionWidth={width}
