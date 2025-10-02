@@ -5,7 +5,7 @@ import { MyComposition } from './Composition';
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      <Composition id="Empty" component={MyComposition} durationInFrames={150} fps={30} width={1920} height={1080} />
+      <Composition id="Hello" component={MyComposition} durationInFrames={150} fps={30} width={1920} height={1080} />
     </>
   );
 };
