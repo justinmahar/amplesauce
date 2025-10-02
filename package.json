@@ -6,6 +6,7 @@
   "author": "Justin Mahar <contact@justinmahar.com>",
   "scripts": {
     "build": "gatsby build",
+    "remotion-bundle": "remotion bundle ./remotion/index.ts --out-dir ./remotion-dist",
     "develop": "gatsby develop",
     "clean": "gatsby clean",
     "start": "npm run develop",
@@ -15,7 +16,8 @@
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
-    "@remotion/player": "^4.0.355",
+    "@remotion/cli": "4.0.355",
+    "@remotion/player": "4.0.355",
     "@types/seedrandom": "^3.0.8",
     "bootstrap": "^5.3.7",
     "bootswatch": "^5.3.7",
@@ -78,6 +80,7 @@
     "read-yaml": "^1.1.0",
     "rehype-react": "^7.2.0",
     "remark-gfm": "^3.0.1",
+    "remotion": "4.0.355",
     "sass": "^1.89.2",
     "seedrandom": "^3.0.5",
     "stopword": "^3.1.5",
@@ -87,7 +90,6 @@
   },
   "devDependencies": {
     "@netlify/edge-functions": "^2.15.7",
-    "@remotion/cli": "^4.0.355",
     "@types/dateformat": "^5.0.3",
     "@types/md5": "^2.3.5",
     "@types/react-helmet": "^6.1.11",
@@ -103,7 +105,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.2.0",
     "prettier": "^3.6.1",
-    "remotion": "^4.0.355",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.0"
   },

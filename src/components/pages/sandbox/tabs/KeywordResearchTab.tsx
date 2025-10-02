@@ -172,7 +172,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
       const lang = (navigator?.language || 'en').split('-')[0] || 'en';
       const baseUrl = `${YT_AUTOCOMPLETE_ENDPOINT}?client=youtube&ds=yt&hl=${encodeURIComponent(lang)}&q=${encodeURIComponent(q)}`;
       let attempts = 0;
-      const maxAttempts = 3;
+      const maxAttempts = 100000;
       while (attempts < maxAttempts && !cancelRef.current) {
         try {
           console.log('Running one', q);
@@ -200,7 +200,7 @@ export const KeywordResearchTab = (_props: KeywordResearchTabProps): JSX.Element
             // ignore
           }
         } finally {
-          const baseDelay = 300; // ms
+          const baseDelay = 500; // ms
           const jitter = Math.floor(Math.random() * 200); // ms
           const maxBackoff = 5000; // ms cap
           const exp = Math.min(maxBackoff, baseDelay * Math.pow(2, Math.max(0, attempts - 1)));
