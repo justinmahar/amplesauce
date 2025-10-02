@@ -6,6 +6,7 @@ import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
+import remotionPlugin from '@remotion/eslint-plugin';
 
 /**
  * We use a JavaScript file for the eslint config (instead of a JSON file) as it supports
@@ -31,6 +32,8 @@ export default [
       'lib/',
       'dist/',
       '**/*.js.old', // Ignoring old config files
+      'remotion-dist/',
+      'remotion-render/',
     ],
   },
 
@@ -42,6 +45,7 @@ export default [
     plugins: {
       react: pluginReact,
       'react-hooks': pluginReactHooks,
+      '@remotion': remotionPlugin,
     },
     languageOptions: {
       globals: {
@@ -66,6 +70,12 @@ export default [
       'react/prop-types': 'off',
       'react/no-unescaped-entities': 'off',
     },
+  },
+
+  // Remotion-specific overrides
+  {
+    files: ['src/remotion/*.{ts,tsx}'],
+    extends: ['plugin:@remotion/recommended'],
   },
 
   {

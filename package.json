@@ -6,7 +6,7 @@
   "author": "Justin Mahar <contact@justinmahar.com>",
   "scripts": {
     "build": "gatsby build",
-    "remotion-bundle": "remotion bundle ./remotion/index.ts --out-dir ./remotion-dist",
+    "remotion-bundle": "remotion bundle ./src/remotion/index.ts --out-dir ./remotion-dist",
     "remotion-render": "remotion render https://amplesauce-remotion.netlify.app/ Hello ./remotion-render/out.mp4",
     "develop": "gatsby develop",
     "clean": "gatsby clean",
@@ -91,6 +91,7 @@
   },
   "devDependencies": {
     "@netlify/edge-functions": "^2.15.7",
+    "@remotion/eslint-plugin": "^4.0.355",
     "@types/dateformat": "^5.0.3",
     "@types/md5": "^2.3.5",
     "@types/react-helmet": "^6.1.11",

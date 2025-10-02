@@ -1,13 +1,13 @@
 import React from 'react';
 import { Composition } from 'remotion';
-import { AmpleSauceComposition } from './AmpleSauceComposition';
+import { AmpleSauceSequence } from './AmpleSauceSequence';
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
         id="Hello"
-        component={AmpleSauceComposition}
+        component={AmpleSauceSequence}
         durationInFrames={150}
         fps={30}
         width={1920}
