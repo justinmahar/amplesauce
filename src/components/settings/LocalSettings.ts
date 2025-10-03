@@ -10,12 +10,30 @@ export enum LocalSettingsKeys {
   adminViewDisabledState = 'adminViewDisabledState',
   templateState = 'templateState',
   darkModeEnabledState = 'darkModeEnabledState',
+  elevenLabsApiKey = 'elevenLabsApiKey',
+  elevenLabsSelectedVoiceId = 'elevenLabsSelectedVoiceId',
+  elevenLabsModelId = 'elevenLabsModelId',
+  elevenLabsOutputFormat = 'elevenLabsOutputFormat',
+  elevenLabsStability = 'elevenLabsStability',
+  elevenLabsSimilarityBoost = 'elevenLabsSimilarityBoost',
+  elevenLabsStyle = 'elevenLabsStyle',
+  elevenLabsUseSpeakerBoost = 'elevenLabsUseSpeakerBoost',
+  elevenLabsText = 'elevenLabsText',
 }
 
 export const LocalSettingsDefaults = {
   [LocalSettingsKeys.adminViewDisabledState]: false,
   [LocalSettingsKeys.templateState]: false,
   [LocalSettingsKeys.darkModeEnabledState]: true,
+  [LocalSettingsKeys.elevenLabsApiKey]: '',
+  [LocalSettingsKeys.elevenLabsSelectedVoiceId]: '',
+  [LocalSettingsKeys.elevenLabsModelId]: 'eleven_multilingual_v2',
+  [LocalSettingsKeys.elevenLabsOutputFormat]: 'mp3_44100_128',
+  [LocalSettingsKeys.elevenLabsStability]: 0.5,
+  [LocalSettingsKeys.elevenLabsSimilarityBoost]: 0.75,
+  [LocalSettingsKeys.elevenLabsStyle]: 0.1,
+  [LocalSettingsKeys.elevenLabsUseSpeakerBoost]: true,
+  [LocalSettingsKeys.elevenLabsText]: '',
 };
 
 export const useLocalSettings = () => {
@@ -46,6 +64,51 @@ export const useLocalSettings = () => {
     [LocalSettingsKeys.darkModeEnabledState]: useLocalStorage(
       LocalSettingsKeys.darkModeEnabledState,
       LocalSettingsDefaults[LocalSettingsKeys.darkModeEnabledState],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsApiKey]: useLocalStorage<string>(
+      LocalSettingsKeys.elevenLabsApiKey,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsApiKey],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsSelectedVoiceId]: useLocalStorage<string>(
+      LocalSettingsKeys.elevenLabsSelectedVoiceId,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsSelectedVoiceId],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsModelId]: useLocalStorage<string>(
+      LocalSettingsKeys.elevenLabsModelId,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsModelId],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsOutputFormat]: useLocalStorage<string>(
+      LocalSettingsKeys.elevenLabsOutputFormat,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsOutputFormat],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsStability]: useLocalStorage<number>(
+      LocalSettingsKeys.elevenLabsStability,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsStability],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsSimilarityBoost]: useLocalStorage<number>(
+      LocalSettingsKeys.elevenLabsSimilarityBoost,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsSimilarityBoost],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsStyle]: useLocalStorage<number>(
+      LocalSettingsKeys.elevenLabsStyle,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsStyle],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsUseSpeakerBoost]: useLocalStorage<boolean>(
+      LocalSettingsKeys.elevenLabsUseSpeakerBoost,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsUseSpeakerBoost],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsText]: useLocalStorage<string>(
+      LocalSettingsKeys.elevenLabsText,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsText],
       storageOptions,
     ),
   };

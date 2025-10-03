@@ -7,7 +7,7 @@
   "scripts": {
     "build": "gatsby build",
     "remotion-bundle": "remotion bundle ./src/remotion/index.ts --out-dir ./remotion-dist",
-    "remotion-render": "remotion render https://amplesauce-remotion.netlify.app/ greeting ./remotion-render/out.mp4 --props remotion-props.json",
+    "remotion-render": "remotion render https://amplesauce-remotion.netlify.app/ greeting ./remotion-render/out.mp4 --props remotion-props.json --image-format=jpeg --jpeg-quality=100",
     "develop": "gatsby develop",
     "clean": "gatsby clean",
     "start": "npm run develop",
