@@ -70,13 +70,16 @@ export const useWorkspaceChannel = (workspaceUid: string, uid?: string): DocLoad
 
 /** Loads a collection of WorkspaceChannels. */
 export const useWorkspaceChannels = (
-  workspaceUid: string,
+  workspaceUid?: string,
   q: (collRef?: CollectionReference<DocumentData>) => CollectionReference<DocumentData> | undefined = (collRef) =>
     collRef,
 ): CollectionLoader<WorkspaceChannel> => {
   return useCollectionLoader(
-    WorkspaceChannel.getWorkspaceChannelCollectionPath(workspaceUid),
+    workspaceUid ? WorkspaceChannel.getWorkspaceChannelCollectionPath(workspaceUid) : undefined,
     React.useCallback(q, []),
-    React.useCallback((id: string, data: DocData) => createWorkspaceChannel(id, data, workspaceUid), [workspaceUid]),
+    React.useCallback(
+      (id: string, data: DocData) => createWorkspaceChannel(id, data, `${workspaceUid}`),
+      [workspaceUid],
+    ),
   );
 };

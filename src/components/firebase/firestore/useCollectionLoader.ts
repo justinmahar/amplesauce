@@ -5,14 +5,14 @@ import { firestore } from '../firebase-app';
 import { DocData, QueryDataSnapshot } from './models/DocDataAccessor';
 
 export function useCollectionLoader<T>(
-  collectionPath: string,
+  collectionPath: string | undefined,
   query: (
     collRef?: CollectionReference<DocumentData>,
   ) => Query<DocumentData> | CollectionReference<DocumentData> | undefined = (collRef) => collRef,
   create: (id: string, data: DocData) => T,
   shouldLoad: boolean = true,
 ) {
-  const ref = firestore && shouldLoad ? collection(firestore, collectionPath) : undefined;
+  const ref = firestore && shouldLoad && collectionPath ? collection(firestore, collectionPath) : undefined;
   const collQuery = React.useMemo(() => query(ref), [query, ref]);
   const [snapshot, loading, error] = FirestoreHooks.useCollection(collQuery);
   const hasRefAndIsLoading = !!ref && shouldLoad && loading;

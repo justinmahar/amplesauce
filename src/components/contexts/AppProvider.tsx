@@ -9,6 +9,7 @@ import { UserSettingsProvider } from './UserSettingsProvider';
 import { ThemeProvider } from './ThemeProvider';
 import { GlobalStateProvider } from './GlobalStateProvider';
 import { AppMediator } from '../../mediators/AppMediator';
+import { WorkspaceProvider } from './WorkspaceProvider';
 
 /**
  * This is a custom context provider wrapper that includes all core contexts, such as the user account and logged in user's settings.
@@ -25,13 +26,15 @@ export const AppProvider = ({ children }: ElementProps): React.JSX.Element => {
         <SiteSettingsProvider>
           <UserAccountProvider>
             <UserSettingsProvider>
-              <LocalSettingsProvider>
-                <ThemeProvider>
-                  <CustomAppProvider>
-                    <AppMediator>{children}</AppMediator>
-                  </CustomAppProvider>
-                </ThemeProvider>
-              </LocalSettingsProvider>
+              <WorkspaceProvider>
+                <LocalSettingsProvider>
+                  <ThemeProvider>
+                    <CustomAppProvider>
+                      <AppMediator>{children}</AppMediator>
+                    </CustomAppProvider>
+                  </ThemeProvider>
+                </LocalSettingsProvider>
+              </WorkspaceProvider>
             </UserSettingsProvider>
           </UserAccountProvider>
         </SiteSettingsProvider>

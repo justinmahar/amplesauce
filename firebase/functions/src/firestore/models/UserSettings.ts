@@ -2,6 +2,7 @@ import { UserRecord } from 'firebase-admin/auth';
 import { DocumentData, DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { DocDataAccessor } from './DocDataAccessor';
+import { createWorkspaceForUser } from '../../https/createWorkspace';
 
 export const userSettingsCollectionName = 'users';
 

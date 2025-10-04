@@ -8,6 +8,47 @@ import { generalRateLimiter } from '../firestore/rate-limiters/rate-limiters';
 import { HttpsRequestResult } from '../types/HttpsRequestResult';
 import { handleCors } from './handleCors';
 
+export type CreateWorkspaceResult = { workspaceUid: string; name: string };
+
+export const createWorkspaceForUser = async (userId: string): Promise<CreateWorkspaceResult> => {
+  const userRecord = await getAuth().getUser(userId);
+  const userSettingsSnap = await firestore.doc(UserSettings.getUserSettingsDocPath(userId)).get();
+  if (!userSettingsSnap.exists) {
+    throw new Error('User settings do not exist. Call setupUser first.');
+  }
+  const userSettings = new UserSettings(
+    userId,
+    userSettingsSnap.data() ?? {},
+    UserSettings.getUserSettingsCollectionPath(),
+  );
+  const workspaces = userSettings.getWorkspaces();
+  if (Array.isArray(workspaces) && workspaces.length >= Workspace.MAX_WORKSPACES) {
+    throw new Error(`Workspace limit reached (max ${Workspace.MAX_WORKSPACES}).`);
+  }
+
+  const displayName = userSettings.getDisplayName() || userRecord.displayName || 'User';
+  const workspaceName = `${displayName}'s Workspace`;
+  const newWorkspaceData = {
+    ...WorkspaceDefaults,
+    [WorkspaceFields.name]: workspaceName,
+    [WorkspaceFields.owners]: [userId],
+  };
+  const workspaceRef = await firestore.collection(Workspace.getWorkspaceCollectionPath()).add(newWorkspaceData);
+  const newWorkspaceUid = workspaceRef.id;
+
+  const updatedWorkspaces = [...(workspaces ?? []), newWorkspaceUid];
+  const currentWs = userSettings.getCurrentWorkspaceUid();
+  const updates: Record<string, unknown> = {
+    [UserSettingsFields.workspaces]: updatedWorkspaces,
+  };
+  if (!currentWs) {
+    updates[UserSettingsFields.currentWorkspaceUid] = newWorkspaceUid;
+  }
+  await firestore.doc(UserSettings.getUserSettingsDocPath(userId)).update(updates);
+
+  return { workspaceUid: newWorkspaceUid, name: workspaceName };
+};
+
 export const createWorkspace = https.onRequest(async (request, response): Promise<void> => {
   handleCors(request, response, async () => {
     const httpResult = new HttpsRequestResult();
@@ -26,51 +67,9 @@ export const createWorkspace = https.onRequest(async (request, response): Promis
             httpResult.status = StatusCodes.BAD_REQUEST;
             httpResult.error = `Missing argument${missingArgs.length !== 1 ? 's' : ''}: ${missingArgs.join(', ')}`;
           } else {
-            const userRecord = await getAuth().getUser(userId);
-            const userSettingsSnap = await firestore.doc(UserSettings.getUserSettingsDocPath(userId)).get();
-            if (!userSettingsSnap.exists) {
-              httpResult.status = StatusCodes.BAD_REQUEST;
-              httpResult.error = 'User settings do not exist. Call setupUser first.';
-              httpResult.send(response);
-              return;
-            }
-            const userSettings = new UserSettings(
-              userId,
-              userSettingsSnap.data() ?? {},
-              UserSettings.getUserSettingsCollectionPath(),
-            );
-            const workspaces = userSettings.getWorkspaces();
-            if (Array.isArray(workspaces) && workspaces.length >= Workspace.MAX_WORKSPACES) {
-              httpResult.status = StatusCodes.BAD_REQUEST;
-              httpResult.error = `Workspace limit reached (max ${Workspace.MAX_WORKSPACES}).`;
-              httpResult.send(response);
-              return;
-            }
-
-            const displayName = userSettings.getDisplayName() || userRecord.displayName || 'User';
-            const workspaceName = `${displayName}'s Workspace`;
-            const newWorkspaceData = {
-              ...WorkspaceDefaults,
-              [WorkspaceFields.name]: workspaceName,
-              [WorkspaceFields.owners]: [userId],
-            };
-            const workspaceRef = await firestore
-              .collection(Workspace.getWorkspaceCollectionPath())
-              .add(newWorkspaceData);
-            const newWorkspaceUid = workspaceRef.id;
-
-            const updatedWorkspaces = [...(workspaces ?? []), newWorkspaceUid];
-            const currentWs = userSettings.getCurrentWorkspaceUid();
-            const updates: Record<string, unknown> = {
-              [UserSettingsFields.workspaces]: updatedWorkspaces,
-            };
-            if (!currentWs) {
-              updates[UserSettingsFields.currentWorkspaceUid] = newWorkspaceUid;
-            }
-            await firestore.doc(UserSettings.getUserSettingsDocPath(userId)).update(updates);
-
+            const result = await createWorkspaceForUser(userId);
             httpResult.status = StatusCodes.OK;
-            httpResult.value = `Workspace created: ${JSON.stringify({ workspaceUid: newWorkspaceUid, name: workspaceName })}`;
+            httpResult.value = `Workspace created: ${JSON.stringify(result)}`;
           }
         } else {
           httpResult.status = StatusCodes.METHOD_NOT_ALLOWED;
