@@ -46,3 +46,4 @@ edgeFunctionsRoot: https://amplesauce.netlify.app
 promptEndpoint: https://prompt-zydnejjbcq-uc.a.run.app
 googleOauthClientId: '204739076247-bqneothhhrpu6aluf77cb6soonp3i1g9.apps.googleusercontent.com'
 headerHeight: 80
+createWorkspaceEndpoint: https://us-central1-ample-sauce.cloudfunctions.net/createWorkspace

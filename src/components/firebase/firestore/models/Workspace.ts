@@ -9,6 +9,8 @@ export enum WorkspaceFields {
   owners = 'o',
   channels = 'c',
   affiliateCollections = 'aC',
+  locker = 'l',
+  lockerMarker = 'lM',
 }
 
 export interface WorkspaceChannel {
@@ -35,6 +37,8 @@ export interface WorkspaceData {
   [WorkspaceFields.owners]: string[];
   [WorkspaceFields.channels]: WorkspaceChannel[];
   [WorkspaceFields.affiliateCollections]: AffiliateCollection[];
+  [WorkspaceFields.locker]: string;
+  [WorkspaceFields.lockerMarker]: string;
 }
 
 export class Workspace extends DocDataAccessor {
@@ -44,6 +48,8 @@ export class Workspace extends DocDataAccessor {
     [WorkspaceFields.owners]: [],
     [WorkspaceFields.channels]: [],
     [WorkspaceFields.affiliateCollections]: [],
+    [WorkspaceFields.locker]: '',
+    [WorkspaceFields.lockerMarker]: '',
   };
 
   public static collectionName = 'workspaces';
@@ -86,6 +92,25 @@ export class Workspace extends DocDataAccessor {
 
   public setAffiliateCollections(affiliateCollections: AffiliateCollection[]): Promise<boolean> {
     return this.update({ [WorkspaceFields.affiliateCollections]: affiliateCollections });
+  }
+
+  public getLocker(): string {
+    return this.getValue(this.getData()[WorkspaceFields.locker], Workspace.defaults[WorkspaceFields.locker]);
+  }
+
+  public setLocker(locker: string): Promise<boolean> {
+    return this.update({ [WorkspaceFields.locker]: locker });
+  }
+
+  public getLockerMarker(): string {
+    return this.getValue(
+      this.getData()[WorkspaceFields.lockerMarker],
+      Workspace.defaults[WorkspaceFields.lockerMarker],
+    );
+  }
+
+  public setLockerMarker(lockerMarker: string): Promise<boolean> {
+    return this.update({ [WorkspaceFields.lockerMarker]: lockerMarker });
   }
 
   // ---- Helpers: Affiliate Collections ----

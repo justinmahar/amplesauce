@@ -47,6 +47,7 @@ export const siteSettingsQuery = graphql`
       edgeFunctionsRoot
       googleOauthClientId
       promptEndpoint
+      createWorkspaceEndpoint
     }
   }
 `;
@@ -96,6 +97,7 @@ export type SiteSettingsData = {
     edgeFunctionsRoot: string;
     googleOauthClientId: string;
     promptEndpoint: string;
+    createWorkspaceEndpoint: string;
   };
 };
 

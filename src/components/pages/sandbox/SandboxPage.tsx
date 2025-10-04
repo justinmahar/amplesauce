@@ -11,6 +11,7 @@ import { RemotionTab } from './tabs/RemotionTab';
 import { MediaFetcherTab } from './tabs/MediaFetcherTab';
 import { ThumbnailMakerTab } from './tabs/ThumbnailMakerTab';
 import { WorkspaceTab } from './tabs/WorkspaceTab';
+import { AffiliateProgramsTab } from './tabs/AffiliateProgramsTab';
 
 // Constants
 const TABS = [
@@ -21,6 +22,7 @@ const TABS = [
   'Remotion',
   'Media Fetcher',
   'Thumbnail Maker',
+  'Affiliate Programs',
 ] as const;
 
 type TabKey = (typeof TABS)[number];
@@ -72,6 +74,7 @@ export default function SandboxPage(_props: SandboxPageProps): JSX.Element {
             {activeTab === 'Remotion' && <RemotionTab />}
             {activeTab === 'Media Fetcher' && <MediaFetcherTab />}
             {activeTab === 'Thumbnail Maker' && <ThumbnailMakerTab />}
+            {activeTab === 'Affiliate Programs' && <AffiliateProgramsTab />}
             {activeTab === 'Workspace' && <WorkspaceTab />}
           </Col>
         </Row>

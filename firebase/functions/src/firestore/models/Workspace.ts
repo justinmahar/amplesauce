@@ -8,6 +8,8 @@ export enum WorkspaceFields {
   owners = 'o',
   channels = 'c',
   affiliateCollections = 'aC',
+  locker = 'l',
+  lockerMarker = 'lM',
 }
 
 export interface WorkspaceChannelInfo {
@@ -34,6 +36,8 @@ export interface WorkspaceData extends DocumentData {
   [WorkspaceFields.owners]: string[];
   [WorkspaceFields.channels]: WorkspaceChannelInfo[];
   [WorkspaceFields.affiliateCollections]: AffiliateCollection[];
+  [WorkspaceFields.locker]: string;
+  [WorkspaceFields.lockerMarker]: string;
 }
 
 export const WorkspaceDefaults: WorkspaceData = {
@@ -41,6 +45,8 @@ export const WorkspaceDefaults: WorkspaceData = {
   [WorkspaceFields.owners]: [],
   [WorkspaceFields.channels]: [],
   [WorkspaceFields.affiliateCollections]: [],
+  [WorkspaceFields.locker]: '',
+  [WorkspaceFields.lockerMarker]: '',
 };
 
 export class Workspace extends DocDataAccessor {
