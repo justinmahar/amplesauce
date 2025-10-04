@@ -1,14 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Admin flag stored on the admin's own user settings doc: users/{uid}.rA
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rA == true;
+    }
+
+    // Workspace ownership: workspaces/{workspaceId}.o contains auth uid
+    function isWorkspaceOwner(workspaceId) {
+      return isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.o);
+    }
+
     match /users/{userId} {
-      // Allow anyone logged in to read their own settings
-    	allow read: if request.auth != null && request.auth.uid == userId;
-      // Allow create and update if logged in
-      // Don't allow changes to: roleAdmin
-      allow create, update: if request.auth != null && request.auth.uid == userId && !('roleAdmin' in request.resource.data);
-			// Allow admins full read/write
-      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roleAdmin == true;
+      // Read own user settings
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      // Preserve existing write behavior for owners of the doc (prevent changing admin flag)
+      allow create, update: if isSignedIn() && request.auth.uid == userId && !('rA' in request.resource.data);
+      // Admin override
+      allow read, update: if isAdmin();
+    }
+
+    // Profiles - user can read their own profile or admins can read
+    match /profiles/{profileId} {
+      // Owners can read/update their own profile
+      allow read: if isSignedIn() && request.auth.uid == profileId;
+      allow update: if isSignedIn() && request.auth.uid == profileId;
+      // Admin override
+      allow read, update: if isAdmin();
+    }
+
+    // Workspaces - owner can read workspace and any subcollections; admins can read
+    match /workspaces/{workspaceId} {
+      // Owners can read/update workspace
+      allow read, update: if isWorkspaceOwner(workspaceId);
+      // Admin override
+      allow read, update: if isAdmin();
+      match /{document=**} {
+        // Owners can read/update nested docs
+        allow read, update: if isWorkspaceOwner(workspaceId);
+        // Admin override
+        allow read, update: if isAdmin();
+      }
     }
   }
 }

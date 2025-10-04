@@ -11,6 +11,7 @@ export { onDeleteUser } from './auth/onDeleteUser';
 
 // === Https endpoints === === === === === === === === === === === ===
 export { setupUser } from './https/setupUser';
+export { createWorkspace } from './https/createWorkspace';
 
 // === Genkit endpoints === === === === === === === === === === === ===
 const geminiApiKey = defineSecret('GEMINI_API_KEY');

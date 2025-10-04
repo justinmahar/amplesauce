@@ -13,6 +13,8 @@ export enum UserSettingsFields {
   photoURL = 'pU',
   channels = 'ch',
   authToken = 'aT',
+  workspaces = 'w',
+  currentWorkspaceUid = 'cW',
 }
 
 export const UserSettingsDefaults = {
@@ -23,6 +25,8 @@ export const UserSettingsDefaults = {
   [UserSettingsFields.photoURL]: '',
   [UserSettingsFields.creationTime]: 0,
   [UserSettingsFields.authToken]: '',
+  [UserSettingsFields.workspaces]: [],
+  [UserSettingsFields.currentWorkspaceUid]: null as string | null,
 };
 
 export interface Channel {
@@ -95,6 +99,28 @@ export class UserSettings extends DocDataAccessor {
     return this.update({ [UserSettingsFields.authToken]: authToken });
   };
 
+  public getWorkspaces = (): string[] => {
+    return this.getValue(
+      this.getData()[UserSettingsFields.workspaces],
+      UserSettingsDefaults[UserSettingsFields.workspaces],
+    );
+  };
+
+  public setWorkspaces = (workspaces: string[]): Promise<boolean> => {
+    return this.update({ [UserSettingsFields.workspaces]: workspaces });
+  };
+
+  public getCurrentWorkspaceUid = (): string | null => {
+    return this.getValue(
+      this.getData()[UserSettingsFields.currentWorkspaceUid],
+      UserSettingsDefaults[UserSettingsFields.currentWorkspaceUid],
+    );
+  };
+
+  public setCurrentWorkspaceUid = (currentWorkspaceUid: string | null): Promise<boolean> => {
+    return this.update({ [UserSettingsFields.currentWorkspaceUid]: currentWorkspaceUid });
+  };
+
   // === Static === === === === === === === === === === === === === === ===
 
   public static getUserSettingsCollectionPath(): string {
@@ -120,6 +146,8 @@ export class UserSettings extends DocDataAccessor {
       [UserSettingsFields.email]: email,
       [UserSettingsFields.creationTime]: new Date(user.metadata.creationTime).getTime(),
       [UserSettingsFields.photoURL]: user.photoURL || '',
+      [UserSettingsFields.workspaces]: [],
+      [UserSettingsFields.currentWorkspaceUid]: null,
     };
 
     if (!userSettingsSnap || !userSettingsSnap.exists) {

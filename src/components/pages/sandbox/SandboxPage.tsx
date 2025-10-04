@@ -10,9 +10,11 @@ import { ContentResearchTab } from './tabs/ContentResearchTab';
 import { RemotionTab } from './tabs/RemotionTab';
 import { MediaFetcherTab } from './tabs/MediaFetcherTab';
 import { ThumbnailMakerTab } from './tabs/ThumbnailMakerTab';
+import { WorkspaceTab } from './tabs/WorkspaceTab';
 
 // Constants
 const TABS = [
+  'Workspace',
   'Niche Hunter',
   'Keyword Research',
   'Content Research',
@@ -22,7 +24,7 @@ const TABS = [
 ] as const;
 
 type TabKey = (typeof TABS)[number];
-const DEFAULT_TAB: TabKey = 'Niche Hunter';
+const DEFAULT_TAB: TabKey = 'Workspace';
 const TAB_QUERY_KEY = 'tab';
 
 // Types/Interfaces
@@ -70,6 +72,7 @@ export default function SandboxPage(_props: SandboxPageProps): JSX.Element {
             {activeTab === 'Remotion' && <RemotionTab />}
             {activeTab === 'Media Fetcher' && <MediaFetcherTab />}
             {activeTab === 'Thumbnail Maker' && <ThumbnailMakerTab />}
+            {activeTab === 'Workspace' && <WorkspaceTab />}
           </Col>
         </Row>
       </Container>

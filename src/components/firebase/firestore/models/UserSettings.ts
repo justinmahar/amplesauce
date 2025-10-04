@@ -10,6 +10,8 @@ export enum UserSettingsFields {
   channels = 'ch',
   photoURL = 'pU',
   authToken = 'aT',
+  workspaces = 'w',
+  currentWorkspaceUid = 'cW',
 }
 
 export interface UserSettingsData {
@@ -20,6 +22,8 @@ export interface UserSettingsData {
   [UserSettingsFields.channels]: Record<string, Channel>;
   [UserSettingsFields.photoURL]: string;
   [UserSettingsFields.authToken]: string;
+  [UserSettingsFields.workspaces]: string[];
+  [UserSettingsFields.currentWorkspaceUid]: string | null;
 }
 
 export const UserSettingsDefaults: Partial<UserSettingsData> = {
@@ -30,6 +34,8 @@ export const UserSettingsDefaults: Partial<UserSettingsData> = {
   [UserSettingsFields.channels]: {},
   [UserSettingsFields.photoURL]: '',
   [UserSettingsFields.authToken]: '',
+  [UserSettingsFields.workspaces]: [],
+  [UserSettingsFields.currentWorkspaceUid]: null,
 };
 
 export interface Channel {
@@ -104,6 +110,29 @@ export class UserSettings extends DocDataAccessor {
 
   public setAuthToken = (authToken: string): Promise<boolean> => {
     return this.update({ [UserSettingsFields.authToken]: authToken });
+  };
+
+  // New fields
+  public getWorkspaces = (): string[] => {
+    return this.getValue(
+      this.getData()[UserSettingsFields.workspaces],
+      UserSettingsDefaults[UserSettingsFields.workspaces] ?? [],
+    );
+  };
+
+  public setWorkspaces = (workspaces: string[]): Promise<boolean> => {
+    return this.update({ [UserSettingsFields.workspaces]: workspaces });
+  };
+
+  public getCurrentWorkspaceUid = (): string | null => {
+    return this.getValue(
+      this.getData()[UserSettingsFields.currentWorkspaceUid],
+      UserSettingsDefaults[UserSettingsFields.currentWorkspaceUid] ?? null,
+    );
+  };
+
+  public setCurrentWorkspaceUid = (currentWorkspaceUid: string | null): Promise<boolean> => {
+    return this.update({ [UserSettingsFields.currentWorkspaceUid]: currentWorkspaceUid });
   };
 
   // === Static === === === === === === === === === === === === === === ===

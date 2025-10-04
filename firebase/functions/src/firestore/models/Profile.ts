@@ -6,14 +6,10 @@ export const profileCollectionName = 'profiles';
 
 export enum ProfileFields {
   username = 'uN',
-  totalViews = 'tV',
-  flexScore = 'fS',
 }
 
 export const ProfileDefaults = {
   [ProfileFields.username]: '',
-  [ProfileFields.totalViews]: 0,
-  [ProfileFields.flexScore]: 0,
 };
 
 /**
@@ -31,19 +27,19 @@ export class Profile extends DocDataAccessor {
   };
 
   public getTotalViews = (): number => {
-    return this.getValue(this.getData()[ProfileFields.totalViews], ProfileDefaults[ProfileFields.totalViews]);
+    return 0;
   };
 
-  public setTotalViews = (totalViews: number): Promise<boolean> => {
-    return this.update({ [ProfileFields.totalViews]: totalViews });
+  public setTotalViews = (_totalViews: number): Promise<boolean> => {
+    return Promise.resolve(true);
   };
 
   public getFlexScore = (): number => {
-    return this.getValue(this.getData()[ProfileFields.flexScore], ProfileDefaults[ProfileFields.flexScore]);
+    return 0;
   };
 
-  public setFlexScore = (flexScore: number): Promise<boolean> => {
-    return this.update({ [ProfileFields.flexScore]: flexScore });
+  public setFlexScore = (_flexScore: number): Promise<boolean> => {
+    return Promise.resolve(true);
   };
 
   // === Static === === === === === === === === === === === === === === ===
@@ -93,8 +89,6 @@ export class Profile extends DocDataAccessor {
 
       const defaultProfileData: DocumentData = {
         [ProfileFields.username]: uniqueUsername,
-        [ProfileFields.totalViews]: 0,
-        [ProfileFields.flexScore]: 0,
       };
 
       await docRef.set(defaultProfileData);

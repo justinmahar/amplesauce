@@ -6,22 +6,16 @@ import { DocLoader, useDocLoader } from '../useDocLoader';
 
 export enum ProfileFields {
   username = 'uN',
-  totalViews = 'tV',
-  flexScore = 'fS',
 }
 
 export interface ProfileData {
   [ProfileFields.username]: string;
-  [ProfileFields.totalViews]: number;
-  [ProfileFields.flexScore]: number;
 }
 
 export class Profile extends DocDataAccessor {
   /** Field defaults for the database document. These will be returned if the value is undefined. */
   public static defaults: ProfileData = {
     [ProfileFields.username]: '',
-    [ProfileFields.totalViews]: 0,
-    [ProfileFields.flexScore]: 0,
   };
 
   public static collectionName = 'profiles';
@@ -36,22 +30,6 @@ export class Profile extends DocDataAccessor {
 
   public setUsername(username: string): Promise<boolean> {
     return this.update({ [ProfileFields.username]: username });
-  }
-
-  public getTotalViews(): number {
-    return this.getValue(this.getData()[ProfileFields.totalViews], Profile.defaults.tV);
-  }
-
-  public setTotalViews(totalViews: number): Promise<boolean> {
-    return this.update({ [ProfileFields.totalViews]: totalViews });
-  }
-
-  public getFlexScore(): number {
-    return this.getValue(this.getData()[ProfileFields.flexScore], Profile.defaults.fS);
-  }
-
-  public setFlexScore(flexScore: number): Promise<boolean> {
-    return this.update({ [ProfileFields.flexScore]: flexScore });
   }
 
   // ---- STATIC -------------------------------------------------------------
