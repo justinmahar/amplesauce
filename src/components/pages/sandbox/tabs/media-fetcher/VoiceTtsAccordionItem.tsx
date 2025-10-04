@@ -3,6 +3,7 @@ import { Accordion, Alert, Button, Card, Col, Form, Row, InputGroup, Table } fro
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useLocalSettingsContext } from '../../../../contexts/LocalSettingsProvider';
 import { LocalSettingsKeys } from '../../../../settings/LocalSettings';
+import { useElevenLabsApiKey } from '../../../../../hooks/useElevenLabsApiKey';
 
 export type VoiceTtsAccordionItemProps = { eventKey: string };
 
@@ -24,7 +25,7 @@ export const VoiceTtsAccordionItem = ({ eventKey }: VoiceTtsAccordionItemProps):
   };
 
   const localSettings = useLocalSettingsContext();
-  const [elevenLabsApiKey, setElevenLabsApiKey] = localSettings[LocalSettingsKeys.elevenLabsApiKey];
+  const [elevenLabsApiKey, setElevenLabsApiKey] = useElevenLabsApiKey();
 
   const [text, setText] = localSettings[LocalSettingsKeys.elevenLabsText];
   const [voices, setVoices] = React.useState<VoiceSummary[]>([]);

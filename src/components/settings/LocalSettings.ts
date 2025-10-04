@@ -19,6 +19,10 @@ export enum LocalSettingsKeys {
   elevenLabsStyle = 'elevenLabsStyle',
   elevenLabsUseSpeakerBoost = 'elevenLabsUseSpeakerBoost',
   elevenLabsText = 'elevenLabsText',
+  elevenLabsMusicPrompt = 'elevenLabsMusicPrompt',
+  elevenLabsMusicLengthSecs = 'elevenLabsMusicLengthSecs',
+  elevenLabsMusicForceInstrumental = 'elevenLabsMusicForceInstrumental',
+  elevenLabsMusicOutputFormat = 'elevenLabsMusicOutputFormat',
 }
 
 export const LocalSettingsDefaults = {
@@ -34,6 +38,10 @@ export const LocalSettingsDefaults = {
   [LocalSettingsKeys.elevenLabsStyle]: 0.1,
   [LocalSettingsKeys.elevenLabsUseSpeakerBoost]: true,
   [LocalSettingsKeys.elevenLabsText]: '',
+  [LocalSettingsKeys.elevenLabsMusicPrompt]: '',
+  [LocalSettingsKeys.elevenLabsMusicLengthSecs]: 30,
+  [LocalSettingsKeys.elevenLabsMusicForceInstrumental]: true,
+  [LocalSettingsKeys.elevenLabsMusicOutputFormat]: 'mp3_44100_128',
 };
 
 export const useLocalSettings = () => {
@@ -109,6 +117,26 @@ export const useLocalSettings = () => {
     [LocalSettingsKeys.elevenLabsText]: useLocalStorage<string>(
       LocalSettingsKeys.elevenLabsText,
       LocalSettingsDefaults[LocalSettingsKeys.elevenLabsText],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsMusicPrompt]: useLocalStorage<string>(
+      LocalSettingsKeys.elevenLabsMusicPrompt,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsMusicPrompt],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsMusicLengthSecs]: useLocalStorage<number>(
+      LocalSettingsKeys.elevenLabsMusicLengthSecs,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsMusicLengthSecs],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsMusicForceInstrumental]: useLocalStorage<boolean>(
+      LocalSettingsKeys.elevenLabsMusicForceInstrumental,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsMusicForceInstrumental],
+      storageOptions,
+    ),
+    [LocalSettingsKeys.elevenLabsMusicOutputFormat]: useLocalStorage<string>(
+      LocalSettingsKeys.elevenLabsMusicOutputFormat,
+      LocalSettingsDefaults[LocalSettingsKeys.elevenLabsMusicOutputFormat],
       storageOptions,
     ),
   };
