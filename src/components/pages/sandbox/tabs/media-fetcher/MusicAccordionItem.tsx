@@ -20,6 +20,20 @@ export const MusicAccordionItem = ({ eventKey }: MusicAccordionItemProps): React
   const [audioUrl, setAudioUrl] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
+  // Duration guardrails
+  const MIN_DURATION_SECS = 10;
+  const MAX_DURATION_SECS = 300;
+
+  React.useEffect(() => {
+    const secs = Number(durationSecs ?? 30);
+    if (secs < MIN_DURATION_SECS) {
+      setDurationSecs(MIN_DURATION_SECS);
+    } else if (secs > MAX_DURATION_SECS) {
+      setDurationSecs(MAX_DURATION_SECS);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   React.useEffect(() => {
     return () => {
       if (audioUrl) {
@@ -116,13 +130,20 @@ export const MusicAccordionItem = ({ eventKey }: MusicAccordionItemProps): React
                 <Row className="g-2">
                   <Col md={12}>
                     <Form.Group controlId="musicDuration">
-                      <Form.Label>Duration ({Number(durationSecs ?? 30)}s)</Form.Label>
+                      <Form.Label>
+                        Duration ({Math.min(MAX_DURATION_SECS, Math.max(MIN_DURATION_SECS, Number(durationSecs ?? 30)))}
+                        s)
+                      </Form.Label>
                       <Form.Range
-                        min={5}
-                        max={180}
+                        min={MIN_DURATION_SECS}
+                        max={MAX_DURATION_SECS}
                         step={5}
-                        value={Number(durationSecs ?? 30)}
-                        onChange={(e) => setDurationSecs(Number(e.target.value))}
+                        value={Math.min(MAX_DURATION_SECS, Math.max(MIN_DURATION_SECS, Number(durationSecs ?? 30)))}
+                        onChange={(e) =>
+                          setDurationSecs(
+                            Math.min(MAX_DURATION_SECS, Math.max(MIN_DURATION_SECS, Number(e.target.value))),
+                          )
+                        }
                       />
                     </Form.Group>
                   </Col>
